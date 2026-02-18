@@ -1,0 +1,193 @@
+.invitePage {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0f;
+    padding: 20px;
+    font-family: var(--font-inter), 'Segoe UI', Roboto, sans-serif;
+}
+
+.inviteCard {
+    max-width: 480px;
+    width: 100%;
+    background: rgba(18, 18, 26, 0.95);
+    border: 1px solid rgba(108, 92, 231, 0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(108, 92, 231, 0.1);
+}
+
+.cardHeader {
+    background: linear-gradient(135deg, #6c5ce7, #a855f7, #6366f1);
+    padding: 28px 28px 22px;
+    text-align: center;
+}
+
+.headerLabel {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 8px;
+}
+
+.headerTitle {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.35;
+}
+
+.cardBody {
+    padding: 28px;
+}
+
+.inviteMessage {
+    font-size: 15px;
+    color: #c8c8d0;
+    line-height: 1.6;
+    margin: 0 0 24px;
+}
+
+.inviteMessage strong {
+    color: #ffffff;
+}
+
+.roleBadge {
+    display: inline-block;
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    text-transform: capitalize;
+}
+
+.detailsCard {
+    background: #1a1a2e;
+    border-left: 4px solid #6c5ce7;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 28px;
+}
+
+.detailRow {
+    margin-bottom: 12px;
+}
+
+.detailRow:last-child {
+    margin-bottom: 0;
+}
+
+.detailLabel {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b6b80;
+    margin-bottom: 3px;
+}
+
+.detailValue {
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.acceptForm {
+    display: flex;
+    justify-content: center;
+}
+
+.acceptBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #6c5ce7, #a855f7);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.acceptBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(108, 92, 231, 0.4);
+}
+
+.acceptBtn:active {
+    transform: translateY(0);
+}
+
+/* ── Status States ── */
+.statusIcon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.statusTitle {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    margin: 0 0 10px;
+}
+
+.statusMessage {
+    font-size: 14px;
+    color: #8888a0;
+    text-align: center;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.successIcon {
+    color: #10b981;
+}
+
+.errorIcon {
+    color: #ef4444;
+}
+
+.warningIcon {
+    color: #f59e0b;
+}
+
+/* ── Loading ── */
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 60px 28px;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(108, 92, 231, 0.2);
+    border-top-color: #6c5ce7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loadingText {
+    font-size: 14px;
+    color: #6b6b80;
+}

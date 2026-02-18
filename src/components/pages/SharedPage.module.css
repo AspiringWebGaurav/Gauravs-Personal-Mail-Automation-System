@@ -1,0 +1,114 @@
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-16) var(--space-4);
+    color: var(--text-tertiary);
+    gap: var(--space-3);
+}
+
+.empty h3 {
+    color: var(--text-primary);
+    font-size: var(--text-lg);
+}
+
+.empty p {
+    font-size: var(--text-sm);
+}
+
+.section {
+    margin-bottom: var(--space-8);
+}
+
+.sectionTitle {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-3);
+}
+
+.invCard {
+    padding: var(--space-4) !important;
+    margin-bottom: var(--space-3);
+}
+
+.invCard.responded {
+    opacity: 0.65;
+}
+
+.invHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.invTitle {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+}
+
+.roleBadge {
+    font-size: 10px;
+    font-weight: var(--weight-semibold);
+    color: var(--accent-info);
+    background: rgba(10, 189, 227, 0.12);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.invFrom {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.invActions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+.acceptBtn {
+    flex: 1;
+    padding: var(--space-2) var(--space-3) !important;
+    font-size: var(--text-sm) !important;
+}
+
+.declineBtn {
+    padding: var(--space-2) var(--space-3) !important;
+    font-size: var(--text-sm) !important;
+}
+
+.statusBadge {
+    font-size: 10px;
+    font-weight: var(--weight-semibold);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.statusBadge.accepted {
+    color: var(--accent-success);
+    background: rgba(0, 214, 143, 0.12);
+}
+
+.statusBadge.declined {
+    color: var(--accent-danger);
+    background: rgba(255, 71, 87, 0.12);
+}

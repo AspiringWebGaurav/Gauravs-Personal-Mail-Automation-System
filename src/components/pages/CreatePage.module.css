@@ -1,0 +1,82 @@
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-6) 0 var(--space-4);
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    display: flex;
+    /* Re-confirming display */
+    align-items: center;
+    justify-content: center;
+}
+
+.backBtn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+/* ... existing code ... */
+
+/* ── Invite Chips ── */
+.chipList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: var(--text-sm);
+    /* Increased text size slightly */
+    font-weight: 600;
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+    border-radius: var(--radius-full);
+    letter-spacing: 0.02em;
+    height: 32px;
+}
+
+.chipRemove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    /* Increased from 16 */
+    height: 24px;
+    /* Increased from 16 */
+    margin-right: -4px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(167, 139, 250, 0.2);
+    color: #a78bfa;
+    cursor: pointer;
+    transition: background 0.15s;
+    padding: 0;
+}
+
+.chipRemove:hover {
+    background: rgba(167, 139, 250, 0.35);
+}

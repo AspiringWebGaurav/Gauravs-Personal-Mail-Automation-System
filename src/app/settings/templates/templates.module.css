@@ -1,0 +1,412 @@
+.topBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-6) 0 var(--space-4);
+}
+
+.backBtn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.backBtn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.createBtn {
+    width: 100%;
+    margin-bottom: var(--space-4);
+}
+
+.createForm {
+    padding: var(--space-5) !important;
+    margin-bottom: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+}
+
+/* ── Layout Picker ─────────────────────────── */
+.layoutPicker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-2);
+}
+
+.layoutOption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--space-3) var(--space-2);
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.layoutOption:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-default);
+}
+
+.layoutOption.layoutActive {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-glow);
+}
+
+.layoutEmoji {
+    font-size: 20px;
+}
+
+.layoutLabel {
+    font-size: 11px;
+    font-weight: var(--weight-semibold);
+    text-transform: capitalize;
+    color: var(--text-secondary);
+}
+
+/* ── Message Presets ───────────────────────── */
+.presetGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+}
+
+@media (max-width: 480px) {
+    .presetGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.presetCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-3) var(--space-2);
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: center;
+}
+
+.presetCard:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-default);
+    transform: translateY(-1px);
+}
+
+.presetCard.presetActive {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-glow);
+}
+
+.presetEmoji {
+    font-size: 22px;
+    margin-bottom: 2px;
+}
+
+.presetName {
+    font-size: 12px;
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+}
+
+.presetDesc {
+    font-size: 10px;
+    color: var(--text-tertiary);
+}
+
+/* ── Message Editor ────────────────────────── */
+.messageEditor {
+    min-height: 120px;
+    font-family: inherit;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.placeholderGuide {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    padding: var(--space-3);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.guideTitle {
+    font-size: 11px;
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.placeholderTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.placeholderTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-family: monospace;
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    color: var(--accent-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.placeholderTag:hover {
+    background: var(--accent-primary-glow);
+    border-color: var(--accent-primary);
+}
+
+/* ── Template List ─────────────────────────── */
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.templateCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) !important;
+}
+
+.templateInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.templateName {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+}
+
+.templateSubject {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.templateMeta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.layoutBadge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: var(--weight-semibold);
+    color: var(--accent-info);
+    background: rgba(10, 189, 227, 0.12);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    text-transform: capitalize;
+}
+
+.messageBadge {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cardActions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.previewBtn,
+.deleteBtn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    color: var(--text-tertiary);
+    transition: all var(--transition-fast);
+}
+
+.previewBtn:hover {
+    background: rgba(108, 92, 231, 0.1);
+    color: var(--accent-primary);
+}
+
+.deleteBtn:hover {
+    background: rgba(255, 71, 87, 0.1);
+    color: var(--accent-danger);
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-12);
+    color: var(--text-tertiary);
+    gap: var(--space-3);
+}
+
+.emptyHint {
+    font-size: var(--text-sm);
+    opacity: 0.6;
+}
+
+/* ── Layout Gallery ────────────────────────── */
+.gallerySection {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border-default);
+}
+
+.galleryTitle {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-1);
+}
+
+.galleryDesc {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-4);
+}
+
+.layoutGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+}
+
+.layoutCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-5) var(--space-4);
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.layoutCard:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.15);
+}
+
+.layoutIcon {
+    font-size: 28px;
+}
+
+.layoutName {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    text-transform: capitalize;
+    color: var(--text-primary);
+}
+
+/* ── Preview Modal ─────────────────────────── */
+.previewOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.previewModal {
+    background: var(--bg-primary);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-default);
+    gap: 12px;
+}
+
+.modalHeader h3 {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.modalControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.closeBtn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.closeBtn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
