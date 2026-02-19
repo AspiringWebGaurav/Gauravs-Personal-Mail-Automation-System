@@ -3,43 +3,19 @@ import { EmailThemeColors } from '../emailTemplateRenderer';
 export function renderBrandingFooter(theme: EmailThemeColors, baseUrl: string = 'https://gaurav-mail-sheduling-system.vercel.app'): string {
     const year = new Date().getFullYear();
     const { primaryColor, textColor } = theme;
+    // Auto-adjust footer color based on text color (opacity 0.6)
+    const footerTextColor = textColor;
 
-    // Ensure we have a valid color for the footer text, defaulting to a muted version of the text color
-    const footerTextColor = textColor ? `${textColor}99` : '#666666';
-    const linkColor = primaryColor || '#6c5ce7';
-
+    // Minimal/Thin Footer (With Legal Links)
     return `
-    <!-- ───────────────────────────────────────────────────────────── -->
-    <!-- BRANDING FOOTER (STATIC & CONTROLLED) -->
-    <!-- ───────────────────────────────────────────────────────────── -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 40px; border-top: 1px solid rgba(0,0,0,0.05);">
-        <tr>
-            <td style="padding: 32px 20px; text-align: center;">
-                <!-- Logo / Brand Name -->
-                <p style="margin: 0 0 12px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 700; font-size: 14px; color: ${textColor}; letter-spacing: 1px;">
-                    GMSS
-                </p>
-                
-                <!-- Links -->
-                <p style="margin: 0 0 16px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: ${footerTextColor}; line-height: 1.8;">
-                    <a href="https://www.gauravpatil.online" target="_blank" style="color: ${footerTextColor}; text-decoration: none; font-weight: 500; transition: color 0.2s;">Gaurav's Portfolio</a>
-                    <span style="display: inline-block; margin: 0 8px; color: ${footerTextColor}; opacity: 0.3;">|</span>
-                    <a href="https://www.gauravworkspace.site" target="_blank" style="color: ${footerTextColor}; text-decoration: none; font-weight: 500; transition: color 0.2s;">Gaurav's Workspace</a>
-                </p>
-
-                <!-- Legal Links -->
-                <p style="margin: 0 0 16px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; color: ${footerTextColor}; line-height: 1.8;">
-                    <a href="${baseUrl}/terms" target="_blank" style="color: ${footerTextColor}; text-decoration: none; margin: 0 8px;">Terms</a>
-                    <a href="${baseUrl}/privacy" target="_blank" style="color: ${footerTextColor}; text-decoration: none; margin: 0 8px;">Privacy</a>
-                    <a href="${baseUrl}/license" target="_blank" style="color: ${footerTextColor}; text-decoration: none; margin: 0 8px;">License</a>
-                </p>
-
-                <!-- Copyright -->
-                <p style="margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; color: ${footerTextColor}; opacity: 0.6;">
-                    &copy; ${year} GMSS. All Rights Reserved.
-                </p>
-            </td>
-        </tr>
-    </table>
+    <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); text-align: center;">
+        <p style="margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10px; color: ${footerTextColor}; opacity: 0.5;">
+            <a href="${baseUrl}/terms" style="color:${footerTextColor};text-decoration:none;">Terms</a> &bull;
+            <a href="${baseUrl}/privacy" style="color:${footerTextColor};text-decoration:none;">Privacy</a> &bull;
+            <a href="${baseUrl}/license" style="color:${footerTextColor};text-decoration:none;">License</a>
+            <span style="margin:0 8px;opacity:0.3">|</span>
+            <span style="opacity:0.8;">&copy; ${year} GMSS</span>
+        </p>
+    </div>
     `;
 }

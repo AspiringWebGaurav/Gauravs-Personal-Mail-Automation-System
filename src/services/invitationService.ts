@@ -36,7 +36,7 @@ export async function createInvitation(data: {
             const docSnap = await transaction.get(docRef);
 
             if (docSnap.exists()) {
-                console.log(`[Idempotency] Skipped duplicate invitation ${deterministicId}`);
+                // console.log(`[Idempotency] Skipped duplicate invitation ${deterministicId}`);
                 return deterministicId;
             }
 

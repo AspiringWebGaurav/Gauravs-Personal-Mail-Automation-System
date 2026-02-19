@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import {
     ArrowLeft, Flame, Eye, Pencil, Trash2, TrendingUp,
     AlertTriangle, Shield, Zap, ChevronRight, BarChart3, Activity
@@ -153,9 +155,41 @@ export default function BurnMonitorPage() {
         if (user?.uid) setBurnUser(user.uid);
     }, [user?.uid]);
 
-    // Refresh store every 3 seconds
+    // ── POWERED BY BURN ENGINE ──
+    // Subscribe to server-side authoritative counters
     useEffect(() => {
-        store.refresh();
+        if (!user?.uid) return;
+        const today = new Date().toISOString().split('T')[0];
+
+        // Lightweight Listener: Only updates when server-side counters change
+        const unsub = onSnapshot(doc(db, 'users', user.uid, 'usage', today), (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                // Inject server data into store
+                useBurnStore.setState(prev => ({
+                    todayTotals: {
+                        reads: data.reads || 0,
+                        writes: data.writes || 0,
+                        deletes: data.deletes || 0,
+                    },
+                    // Map Firestore 'hourly.X' map to store 'hourlyHistory'
+                    hourlyHistory: data.hourly || {},
+                    // We can also update projection based on this new truth
+                    projection: {
+                        reads: (data.reads || 0) * 1.5, // Simple projection
+                        writes: (data.writes || 0) * 1.5,
+                        deletes: (data.deletes || 0) * 1.5,
+                    }
+                }));
+            }
+        });
+
+        return () => unsub();
+    }, [user?.uid]);
+
+    // Refresh store every 3 seconds (local animations)
+    useEffect(() => {
+        store.refresh(); // Syncs local interactions
         const interval = setInterval(() => store.refresh(), 3000);
         return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -434,6 +468,52 @@ export default function BurnMonitorPage() {
                     />
                     <span className={styles.switchTrack} />
                 </label>
+            </motion.div>
+
+            {/* Simulation Tools */}
+            <motion.div
+                className={styles.section}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.28 }}
+            >
+                <div className={styles.sectionHeader}>
+                    <div className={styles.sectionTitle}>
+                        <Zap size={16} />
+                        Simulation
+                    </div>
+                </div>
+                <motion.button
+                    className={styles.backBtn}
+                    style={{ width: '100%', borderRadius: '8px', fontSize: '0.85rem', height: '40px', gap: '8px', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: '1px dashed #6366f1' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                        // Client-side simulation
+                        const reads = Math.floor(Math.random() * 500) + 100;
+                        const writes = Math.floor(Math.random() * 50) + 10;
+                        useBurnStore.getState().refresh();
+                        useBurnStore.setState(prev => ({
+                            todayTotals: {
+                                reads: prev.todayTotals.reads + reads,
+                                writes: prev.todayTotals.writes + writes,
+                                deletes: prev.todayTotals.deletes
+                            },
+                            anomalies: [
+                                {
+                                    type: 'spike_reads',
+                                    message: `Simulated Spike: +${reads} reads detected`,
+                                    timestamp: Date.now(),
+                                    value: reads,
+                                    threshold: 100
+                                },
+                                ...prev.anomalies
+                            ]
+                        }));
+                    }}
+                >
+                    <Flame size={16} />
+                    Simulate Traffic Spike
+                </motion.button>
             </motion.div>
 
             {/* Recommendations */}

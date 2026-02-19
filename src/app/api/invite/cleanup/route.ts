@@ -19,6 +19,7 @@ export async function GET() {
         const count = await getExpiredInviteCount();
         return NextResponse.json({ count });
     } catch (error) {
+        console.error('Stats error:', error);
         return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
     }
 }

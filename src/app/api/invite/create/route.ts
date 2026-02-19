@@ -1,284 +1,222 @@
 import 'server-only';
-import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, adminAuth } from '@/lib/server/admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { NextRequest } from 'next/server';
+import { adminAuth, adminDb } from '@/lib/server/admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import crypto from 'crypto';
-import { renderInviteEmail } from '@/lib/inviteEmailTemplate';
-import { cleanupExpiredInvites } from '@/lib/server/cleanup';
+import { logInviteAction } from '@/lib/server/audit-logger';
+import { sendInviteEmail } from '@/lib/server/email';
+import { cleanupLazy } from '@/lib/server/cleanup';
+import { apiWrapper, AppError } from '@/lib/api-framework';
+import { rateLimit } from '@/lib/rate-limiter';
+import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 // ── Constants ──
 const TOKEN_BYTES = 32;
-const EXPIRY_HOURS = 10; // Strict 10-hour expiry — absolute, no extension
+const EXPIRY_HOURS = 10;
 const MAX_INVITES_PER_EVENT = 50;
 const MAX_INVITES_PER_DAY = 100;
 const TOKEN_INVITES_COL = 'tokenInvites';
-const INVITE_LOGS_COL = 'inviteExecutionLogs';
-
-// ── Helpers ──
-function hashToken(token: string): string {
-    return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-function getBaseUrl(request: NextRequest): string {
-    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
-    const origin = request.headers.get('origin') || request.headers.get('x-forwarded-host');
-    if (origin) {
-        const proto = request.headers.get('x-forwarded-proto') || 'https';
-        return origin.startsWith('http') ? origin : `${proto}://${origin}`;
-    }
-    return 'http://localhost:3000';
-}
-
-async function logInviteAction(data: {
-    inviteId: string;
-    action: string;
-    provider?: string;
-    durationMs?: number;
-    errorMessage?: string;
-    metadata?: Record<string, unknown>;
-}) {
-    try {
-        await adminDb.collection(INVITE_LOGS_COL).add({
-            ...data,
-            timestamp: FieldValue.serverTimestamp(),
-        });
-    } catch (e) {
-        console.error('[InviteLog] Failed to write log:', e);
-    }
-}
-
-async function sendInviteEmail(params: {
-    toEmail: string;
-    htmlContent: string;
-    subject: string;
-    fromName: string;
-}): Promise<{ success: boolean; provider: string; durationMs: number; error?: string }> {
-    const start = Date.now();
-
-    const serviceId = process.env.EMAILJS_PROVIDER_1_SERVICE_ID || 'service_37etxg6';
-    const templateId = process.env.EMAILJS_PROVIDER_1_TEMPLATE_ID || 'template_lh3q0q9';
-    const publicKey = process.env.EMAILJS_PROVIDER_1_PUBLIC_KEY || 'xwi6F0t3bw9NkVJHp';
-    const privateKey = process.env.EMAILJS_PROVIDER_1_PRIVATE_KEY || '';
-
-    if (!privateKey) {
-        return { success: false, provider: serviceId, durationMs: Date.now() - start, error: 'No private key configured' };
-    }
-
-    try {
-        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                service_id: serviceId,
-                template_id: templateId,
-                user_id: publicKey,
-                accessToken: privateKey,
-                template_params: {
-                    to_email: params.toEmail,
-                    from_name: params.fromName,
-                    subject: params.subject,
-                    message: params.htmlContent,
-                    reply_to: 'no-reply@gmss.app',
-                },
-            }),
-        });
-
-        const durationMs = Date.now() - start;
-
-        if (response.ok) {
-            return { success: true, provider: serviceId, durationMs };
-        }
-        const errorText = await response.text();
-        return { success: false, provider: serviceId, durationMs, error: `EmailJS ${response.status}: ${errorText}` };
-    } catch (err) {
-        return {
-            success: false,
-            provider: serviceId,
-            durationMs: Date.now() - start,
-            error: err instanceof Error ? err.message : String(err),
-        };
-    }
-}
 
 // ── Main Handler ──
-export async function POST(request: NextRequest) {
+export const POST = (req: NextRequest) => apiWrapper(async () => {
+    // 1. Auth verification
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+        throw new AppError('UNAUTHORIZED', 'Missing auth token', 401);
+    }
+
+    // 1b. Checking IP Rate Limit (DDoS Protection)
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    const limitResult = await rateLimit(`ip_${ip}_create_invite`, 10, 60); // 10/min
+
+    if (!limitResult.success) {
+        throw new AppError('RATE_LIMIT_EXCEEDED', 'Too many requests', 429, { retryAfter: Math.ceil((limitResult.reset - Date.now()) / 1000) });
+    }
+
+    let uid: string;
     try {
-        // 1. Auth verification
-        const authHeader = request.headers.get('authorization');
-        if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const idToken = authHeader.split('Bearer ')[1];
+        const decoded = await adminAuth.verifyIdToken(idToken);
+        uid = decoded.uid;
+    } catch (error) {
+        throw new AppError('UNAUTHORIZED', 'Invalid auth token', 401, error);
+    }
 
-        let uid: string;
-        try {
-            const decoded = await adminAuth.verifyIdToken(authHeader.split('Bearer ')[1]);
-            uid = decoded.uid;
-        } catch {
-            return NextResponse.json({ error: 'Invalid auth token' }, { status: 401 });
-        }
+    // 2. Parse and Validate body (Zod)
+    const body = await req.json();
 
-        // 2. Parse body
-        const body = await request.json();
-        const { eventId, eventTitle, inviteeEmail, role, inviterName, inviterEmail, eventTime, eventLocation } = body;
+    const inviteSchema = z.object({
+        eventId: z.string().min(1),
+        eventTitle: z.string().min(1),
+        inviteeEmail: z.string().email(),
+        role: z.enum(['viewer', 'editor', 'admin', 'guest']).optional(),
+        inviterName: z.string().optional(),
+        inviterEmail: z.string().email().optional(),
+        eventTime: z.string().optional(),
+        eventLocation: z.string().optional(),
+    });
 
-        if (!eventId || !eventTitle || !inviteeEmail || !role) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-        }
+    const validation = inviteSchema.safeParse(body);
 
-        // Basic email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(inviteeEmail)) {
-            return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
-        }
+    if (!validation.success) {
+        throw new AppError('VALIDATION_ERROR', 'Invalid input', 400, validation.error.format());
+    }
 
-        // 3. Rate limiting checks
-        const eventInvitesSnap = await adminDb.collection(TOKEN_INVITES_COL)
-            .where('eventId', '==', eventId)
-            .count().get();
-        if (eventInvitesSnap.data().count >= MAX_INVITES_PER_EVENT) {
-            return NextResponse.json({ error: `Maximum ${MAX_INVITES_PER_EVENT} invites per event` }, { status: 429 });
-        }
+    const { eventId, eventTitle, inviteeEmail, role, inviterName, inviterEmail, eventTime, eventLocation } = validation.data;
 
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const dailyInvitesSnap = await adminDb.collection(TOKEN_INVITES_COL)
-            .where('inviterId', '==', uid)
-            .where('createdAt', '>=', todayStart)
-            .count().get();
-        if (dailyInvitesSnap.data().count >= MAX_INVITES_PER_DAY) {
-            return NextResponse.json({ error: `Daily invite limit (${MAX_INVITES_PER_DAY}) reached` }, { status: 429 });
-        }
+    // 3. Rate limiting checks (Cost Optimized - Firestore Read)
+    const today = new Date().toISOString().split('T')[0];
+    const usageRef = adminDb.collection('users').doc(uid).collection('usage').doc(today);
+    const usageSnap = await usageRef.get();
+    const usageData = usageSnap.data() || {};
 
-        // 4. Generate secure token
-        const rawToken = crypto.randomBytes(TOKEN_BYTES).toString('hex');
-        const tokenHash = hashToken(rawToken);
+    const dailyInviteCount = usageData.inviteCount || 0;
 
-        // 5. Idempotency key (one invite per email per event)
-        const idempotencyKey = `tinv_${eventId}_${inviteeEmail}`;
-        const inviteDocId = `tinv_${crypto.createHash('md5').update(idempotencyKey).digest('hex')}`;
+    if (dailyInviteCount >= MAX_INVITES_PER_DAY) {
+        throw new AppError('QUOTA_EXCEEDED', `Daily invite limit (${MAX_INVITES_PER_DAY}) reached`, 429);
+    }
 
-        // 6. Atomic invite creation via transaction
-        const inviteId = await adminDb.runTransaction(async (t) => {
-            const docRef = adminDb.collection(TOKEN_INVITES_COL).doc(inviteDocId);
-            const existing = await t.get(docRef);
+    // Event-level limit
+    const eventRef = adminDb.collection('events').doc(eventId);
+    const eventSnap = await eventRef.get();
+    const eventData = eventSnap.data();
 
-            if (existing.exists) {
-                const data = existing.data();
-                // Allow re-invite if previous one expired or failed
-                if (data && data.status !== 'expired' && data.status !== 'email_failed' && data.status !== 'revoked') {
-                    throw new Error('DUPLICATE_INVITE');
+    const eventInviteCount = eventData?.inviteCount || 0;
+
+    if (eventInviteCount >= MAX_INVITES_PER_EVENT) {
+        throw new AppError('QUOTA_EXCEEDED', `Maximum ${MAX_INVITES_PER_EVENT} invites per event`, 429);
+    }
+
+    // 4. Generate secure token
+    const rawToken = crypto.randomBytes(TOKEN_BYTES).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    const inviteDocId = adminDb.collection(TOKEN_INVITES_COL).doc().id;
+
+    // 6. Atomic invite creation via transaction
+    try {
+        await adminDb.runTransaction(async (t) => {
+            // Idempotency: Efficient check via Query
+            const existingQuery = adminDb.collection(TOKEN_INVITES_COL)
+                .where('eventId', '==', eventId)
+                .where('inviteeEmail', '==', inviteeEmail)
+                .where('status', 'in', ['pending', 'email_sent', 'email_failed'])
+                .limit(1);
+
+            const existingSnap = await t.get(existingQuery);
+
+            if (!existingSnap.empty) {
+                const existingDoc = existingSnap.docs[0];
+                const data = existingDoc.data();
+                const now = new Date();
+                // Handle different Timestamp formats if needed, usually toDate() works on backend sdk
+                const expiresAt = data.expiresAt.toDate();
+
+                if (expiresAt > now) {
+                    throw new AppError('DUPLICATE_INVITE', 'An active invitation already exists for this email', 409);
                 }
             }
+
+            // Update usage counters
+            t.update(eventRef, {
+                inviteCount: FieldValue.increment(1)
+            });
+
+            t.set(usageRef, {
+                inviteCount: FieldValue.increment(1),
+                lastInviteAt: FieldValue.serverTimestamp()
+            }, { merge: true });
 
             const expiresAt = new Date();
             expiresAt.setTime(expiresAt.getTime() + EXPIRY_HOURS * 60 * 60 * 1000);
 
+            const docRef = adminDb.collection(TOKEN_INVITES_COL).doc(inviteDocId);
             t.set(docRef, {
+                tokenHash,
                 eventId,
                 eventTitle,
                 inviterId: uid,
-                inviterName: inviterName || 'GMSS User',
+                inviterName: inviterName || 'Organizer',
                 inviterEmail: inviterEmail || '',
                 inviteeEmail,
-                tokenHash,
-                status: 'pending',
-                expiresAt,
                 role: role || 'viewer',
-                version: 1,
+                status: 'pending',
+                createdAt: FieldValue.serverTimestamp(),
+                expiresAt: Timestamp.fromDate(expiresAt),
+                eventTime: eventTime || null,
+                eventLocation: eventLocation || null,
+                metadata: {
+                    apiVersion: '2.0',
+                    clientIp: ip
+                },
+                version: 2,
                 providerAttemptCount: 0,
                 emailSentAt: null,
                 acceptedAt: null,
                 acceptedByUid: null,
-                createdAt: FieldValue.serverTimestamp(),
                 updatedAt: FieldValue.serverTimestamp(),
-                idempotencyKey,
             });
 
             return inviteDocId;
         });
+    } catch (err: unknown) {
+        if (err instanceof AppError) throw err;
+        if (err instanceof Error && err.message.includes('DUPLICATE_INVITE')) {
+            throw new AppError('DUPLICATE_INVITE', 'An active invitation already exists for this email', 409);
+        }
+        throw new AppError('DB_ERROR', 'Failed to create invite transaction', 500, err);
+    }
 
-        // Log creation
-        await logInviteAction({
-            inviteId,
-            action: 'CREATED',
-            metadata: { eventId, inviteeEmail, role },
-        });
+    // 7. Audit Log
+    await logInviteAction({
+        inviteId: inviteDocId,
+        action: 'CREATED',
+        performedBy: uid,
+        details: { inviteeEmail, eventId }
+    });
 
-        // 7. Send invite email
-        const baseUrl = getBaseUrl(request);
-        const inviteLink = `${baseUrl}/invite/${rawToken}`;
-
-        const emailHtml = renderInviteEmail({
-            inviterName: inviterName || 'GMSS User',
-            eventTitle,
-            eventTime: eventTime || 'See event for details',
-            eventLocation,
-            inviteLink,
-            role: role || 'viewer',
-        });
+    // 8. Send Email
+    let emailStatus = 'sent';
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+        const inviteUrl = `${baseUrl}/invite/${rawToken}`;
 
         const emailResult = await sendInviteEmail({
             toEmail: inviteeEmail,
-            htmlContent: emailHtml,
-            subject: `You're invited: ${eventTitle}`,
-            fromName: inviterName || 'GMSS',
-        });
-
-        // 8. Update invite status based on email result
-        const updateData: Record<string, unknown> = {
-            providerAttemptCount: FieldValue.increment(1),
-            updatedAt: FieldValue.serverTimestamp(),
-        };
-
-        if (emailResult.success) {
-            updateData.status = 'email_sent';
-            updateData.emailSentAt = FieldValue.serverTimestamp();
-        } else {
-            updateData.status = 'email_failed';
-        }
-
-        await adminDb.collection(TOKEN_INVITES_COL).doc(inviteId).update(updateData);
-
-        // Log email result
-        await logInviteAction({
-            inviteId,
-            action: emailResult.success ? 'EMAIL_SENT' : 'EMAIL_FAILED',
-            provider: emailResult.provider,
-            durationMs: emailResult.durationMs,
-            errorMessage: emailResult.error,
-            metadata: { toEmail: inviteeEmail },
+            inviteUrl: inviteUrl,
+            eventName: eventTitle,
+            inviterName: inviterName || 'Organizer',
+            eventDate: eventTime || 'TBD',
+            location: eventLocation || 'TBD'
         });
 
         if (!emailResult.success) {
-            return NextResponse.json({
-                success: false,
-                inviteId,
-                error: 'Invite created but email delivery failed. You can retry later.',
-                emailError: emailResult.error,
-            }, { status: 207 }); // 207 Multi-Status: partial success
+            emailStatus = 'email_failed';
         }
 
-        return NextResponse.json({ success: true, inviteId });
+        await adminDb.collection(TOKEN_INVITES_COL).doc(inviteDocId).update({
+            status: emailStatus === 'sent' ? 'email_sent' : 'email_failed',
+            emailSentAt: emailStatus === 'sent' ? FieldValue.serverTimestamp() : null,
+            updatedAt: FieldValue.serverTimestamp(),
+            lastProvider: emailResult.provider
+        }).catch(e => logger.error('Failed to update invite status', e));
 
-    } catch (error) {
-        if (error instanceof Error && error.message === 'DUPLICATE_INVITE') {
-            return NextResponse.json({ error: 'An active invitation already exists for this email' }, { status: 409 });
-        }
-
-        console.error('[InviteCreate] Critical error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
-            { status: 500 }
-        );
-    } finally {
-        // Lazy Cleanup: Attempt to delete old expired invites to keep DB clean
-        // We await this to ensure it runs before the Vercel function freezes/terminates
-        try {
-            await cleanupExpiredInvites();
-        } catch (err) {
-            console.error('[Cleanup] Background trigger failed:', err);
-        }
+    } catch (emailErr) {
+        emailStatus = 'email_failed';
+        logger.error('Email sending exception', { error: emailErr });
     }
-}
+
+    // 9. Lazy Cleanup
+    // 9. Lazy Cleanup
+    cleanupLazy(0.05);
+
+    return {
+        success: true,
+        inviteId: inviteDocId,
+        emailStatus,
+        message: emailStatus === 'sent' ? 'Invite sent successfully' : 'Invite created but email failed'
+    };
+});

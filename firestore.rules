@@ -1,30 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Allow public read of system settings (e.g. for Emergency Stop check on login)
-    match /systemSettings/{docId} {
-      allow read: if true;
-    }
-
-    // Token invites — readable ONLY by the creator (inviter) for real-time status updates
-    // Guests access via server-side token validation only.
-    match /tokenInvites/{inviteId} {
-      allow read: if request.auth != null && (
-        resource == null || request.auth.uid == resource.data.inviterId
-      );
-      allow write: if false; // Server-only writes
-    }
-
-    // Invite execution logs — owner-only read, server-only write
-    match /inviteExecutionLogs/{logId} {
-      allow read: if request.auth != null && request.auth.token.email == 'gauravpatil9262@gmail.com';
-      allow write: if false;
-    }
-
-    // Default rule: strictly owner-only for everything else
     match /{document=**} {
-      allow read, write: if request.auth != null && request.auth.token.email == 'gauravpatil9262@gmail.com';
+      allow read, write: if request.auth != null;
     }
   }
 }

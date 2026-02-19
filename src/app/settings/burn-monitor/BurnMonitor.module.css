@@ -45,6 +45,10 @@
     margin: 0;
 }
 
+.badge {
+    text-transform: uppercase;
+}
+
 /* ── Burn Score ── */
 .scoreCard {
     background: var(--glass-bg);

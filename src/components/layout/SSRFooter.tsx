@@ -26,6 +26,8 @@ export function SSRFooter() {
                     <Link href="/terms" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Terms</Link>
                     <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Privacy</Link>
                     <Link href="/license" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>License</Link>
+                    <Link href="/cookies" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Cookies</Link>
+                    <Link href="/acceptable-use" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>AUP</Link>
                 </div>
                 <div style={{
                     fontSize: '12px',

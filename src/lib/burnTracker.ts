@@ -331,23 +331,11 @@ function flushToLocal() {
     } catch { /* localStorage quota */ }
 }
 
-// ── Firestore Flush (once per hour, 1 write) ──
+// ── Firestore Flush (Legacy: Disabled in favor of BurnEngine) ──
 async function flushToFirestore() {
-    if (!flushUserId) return;
-    try {
-        const docRef = doc(db, 'burnMetrics', `${flushUserId}_${currentDate}`);
-        await setDoc(docRef, {
-            userId: flushUserId,
-            date: currentDate,
-            hourly: { ...hourlyHistory, [String(currentHour)]: { ...current } },
-            totals: { ...todayTotals },
-            anomalies: anomalies.filter(a => a.timestamp > Date.now() - 24 * 60 * 60 * 1000),
-            updatedAt: serverTimestamp(),
-        }, { merge: true });
-        // Don't track this write to avoid recursion
-    } catch {
-        // Silent fail — not critical
-    }
+    // Disabled to prevent double-counting and extra writes.
+    // BurnEngine (Server-Side) is now the source of truth.
+    return;
 }
 
 // ── Public: Set user for Firestore flush ──

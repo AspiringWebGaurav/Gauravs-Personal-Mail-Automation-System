@@ -33,7 +33,8 @@ export function renderInviteEmail(params: InviteEmailParams): string {
     // Ensure production links
     let baseUrl = 'https://gmss.app';
     try {
-        baseUrl = new URL(inviteLink).origin;
+        // Prioritize Environment Variable
+        baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(inviteLink).origin;
     } catch (e) {
         // Fallback for relative or invalid URLs
         if (inviteLink.includes('localhost')) {

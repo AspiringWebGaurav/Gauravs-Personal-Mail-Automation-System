@@ -111,6 +111,20 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
+                    "fieldPath": "eventId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "scheduledTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "scheduledReminders",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
                     "fieldPath": "userId",
                     "order": "ASCENDING"
                 },

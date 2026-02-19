@@ -2,7 +2,7 @@ import { adminDb } from '@/lib/server/admin';
 import { InviteAcceptClient } from './InviteAcceptClient';
 import { hashToken } from '@/lib/invite-token';
 import { SSRShell } from '@/components/layout/SSRShell';
-import { Calendar, MapPin, User, AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar, MapPin, User, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +61,7 @@ async function getInviteByToken(token: string): Promise<{ invite: InviteData | n
 
         if (expiresAt < new Date()) {
             try {
-                // Determine base URL dynamically or fallback to localhost if env not set
+                // Determine base URL dynamically
                 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
                 await adminDb.collection('tokenInvites').doc(snap.docs[0].id).update({ status: 'expired' });

@@ -1,4 +1,5 @@
 import https from "https";
+import { logger } from "./logger";
 
 // ═══ SIMULATION MODE ═══
 // When enabled, intercepts all email sends and returns simulated success.
@@ -37,10 +38,13 @@ export async function sendEmail(
     // ═══ SIMULATION MODE GATE ═══
     if (process.env.GMSS_SIMULATION_MODE === "true") {
         simulationCount++;
-        console.log(
-            `📧 [SIMULATION] Email #${simulationCount} [${requestId}] | To: ${params.to_email} | ` +
-            `Subject: ${params.subject || "N/A"} | Provider: ${provider.serviceId}`
-        );
+        logger.info(`📧 [SIMULATION] Email #${simulationCount} [${requestId}] | To: ${params.to_email}`, {
+            event: 'EMAIL_SIMULATION',
+            requestId,
+            to: params.to_email,
+            subject: params.subject || "N/A",
+            provider: provider.serviceId
+        });
         // Simulate network latency
         await new Promise((r) => setTimeout(r, 200));
         return; // Success without real API call
@@ -97,15 +101,14 @@ export async function sendEmail(
         };
 
         // ── LOG REQUEST (REDACTED) ──
-        console.log(JSON.stringify({
-            level: 'INFO',
+        logger.info(`Email Send Init: ${provider.serviceId}`, {
             event: 'EMAIL_SEND_INIT',
             requestId,
             serviceId: provider.serviceId,
             templateId: provider.templateId,
             recipient: params.to_email,
             subject: emailSubject
-        }));
+        });
 
         const req = https.request(options, (res) => {
             let data = "";
@@ -115,29 +118,26 @@ export async function sendEmail(
                 if (res.statusCode === 200) {
                     // Response validation — EmailJS returns 'OK' on success
                     if (data && data.trim() !== 'OK') {
-                        console.warn(JSON.stringify({
-                            level: 'WARN',
+                        logger.warn('EmailJS Unexpected Body', {
                             event: 'EMAILJS_UNEXPECTED_BODY',
                             requestId,
                             body: data.slice(0, 200)
-                        }));
+                        });
                     }
-                    console.log(JSON.stringify({
-                        level: 'INFO',
+                    logger.info(`EmailJS Success: ${res.statusCode}`, {
                         event: 'EMAILJS_SUCCESS',
                         requestId,
                         statusCode: res.statusCode,
                         body: data.trim()
-                    }));
+                    });
                     resolve();
                 } else {
-                    console.error(JSON.stringify({
-                        level: 'ERROR',
+                    logger.error(`EmailJS Failure: ${res.statusCode}`, {
                         event: 'EMAILJS_FAILURE',
                         requestId,
                         statusCode: res.statusCode,
                         body: data
-                    }));
+                    });
                     reject(new Error(`[${requestId}] EmailJS API error ${res.statusCode}: ${data}`));
                 }
             });
@@ -145,12 +145,11 @@ export async function sendEmail(
 
         req.on("error", (err) => {
             clearTimeout(timeout);
-            console.error(JSON.stringify({
-                level: 'ERROR',
+            logger.error(`EmailJS Net Error: ${err.message}`, {
                 event: 'EMAILJS_NET_ERROR',
                 requestId,
                 error: err.message
-            }));
+            });
             reject(new Error(`[${requestId}] EmailJS request failed: ${err.message}`));
         });
 

@@ -16,6 +16,7 @@ import Link from 'next/link';
 import type { EmailTemplate, EmailTheme } from '@/types';
 import styles from './CreatePage.module.css';
 import dynamic from 'next/dynamic';
+import { InviteInput } from '@/components/ui/InviteInput';
 
 const TemplateGallery = dynamic(() => import('@/components/email/TemplateGallery').then(mod => mod.TemplateGallery), {
     loading: () => null,
@@ -26,7 +27,7 @@ const DEFAULT_TEMPLATE_ID = 'sys_template_prof_reminder';
 const DEFAULT_THEME_ID = 'sys_theme_modern_blue';
 
 /* ── Type definitions for the modular create flow ── */
-type CreateType = 'event' | 'send_mail' | 'important_mail';
+type CreateType = 'event' | 'send_mail' | 'important_mail' | 'custom_send';
 
 interface CreateTypeConfig {
     id: CreateType;
@@ -58,6 +59,13 @@ const CREATE_TYPES: CreateTypeConfig[] = [
         description: 'Priority email with urgent templates',
         color: '#ff4757',
     },
+    {
+        id: 'custom_send',
+        icon: <Users size={24} />,
+        label: 'Custom Send Mode',
+        description: 'Flexible sends with granular control',
+        color: '#fdcb6e', // Gold/Orange
+    },
 ];
 
 /* ── Scheduling mode types ── */
@@ -83,9 +91,6 @@ export default function CreatePage() {
     const [endDate, setEndDate] = useState('');
     const [endTime, setEndTime] = useState('');
 
-    // Invite emails (chip-based, for event creation)
-    const [inviteEmails, setInviteEmails] = useState<string[]>([]);
-    const [inviteInput, setInviteInput] = useState('');
 
     // Form State — Mail
     const [subject, setSubject] = useState('');
@@ -151,7 +156,7 @@ export default function CreatePage() {
     const selectedTemplate = useMemo(() => templates.find(t => t.id === selectedTemplateId), [templates, selectedTemplateId]);
     const selectedTheme = useMemo(() => themes.find(t => t.id === selectedThemeId), [themes, selectedThemeId]);
 
-    const isMailType = selectedType === 'send_mail' || selectedType === 'important_mail';
+    const isMailType = selectedType === 'send_mail' || selectedType === 'important_mail' || selectedType === 'custom_send';
 
     const handleNext = () => {
         if (isMailType) {
@@ -198,144 +203,57 @@ export default function CreatePage() {
         if (submitLockRef.current) return;
         submitLockRef.current = true;
 
-        // ── Email validation ──
+        // ── Email validation (Only if explicit recipient is set) ──
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(recipientEmail)) {
+        if (recipientEmail && !emailRegex.test(recipientEmail)) {
             showToast('Please enter a valid email address', 'error');
             submitLockRef.current = false;
             return;
         }
 
         setSaving(true);
-        let createdEventId: string | null = null;
+
         try {
             const scheduledTime = computeScheduledTime();
+            // Prepare Payload
+            const payload = {
+                title: isMailType ? (subject || 'Mail') : title,
+                description: isMailType ? (messageBody || '') : description,
+                location: location || '',
+                startTime: isMailType ? scheduledTime.toISOString() : `${startDate}T${startTime}:00`,
+                endTime: isMailType ? new Date(scheduledTime.getTime() + 60000).toISOString() : `${endDate}T${endTime}:00`,
+                isMailType: isMailType,
+                messageBody: messageBody,
+                subject: subject,
+                recipientEmail: recipientEmail,
+                reminderTiming: reminderTiming,
+                // Timezone could be passed here if collected
+            };
 
-            if (isMailType) {
-                // Mail types: create a minimal event + scheduled reminder
-                const eventTitle = subject || 'Mail';
-                const now = new Date();
-                const eventId = await createEvent({
-                    title: eventTitle,
-                    description: messageBody || '',
-                    location: '',
-                    startTime: scheduledTime > now ? scheduledTime : now,
-                    endTime: new Date((scheduledTime > now ? scheduledTime : now).getTime() + 60000),
-                    categoryId: '',
-                    createdBy: user.uid,
-                });
-                createdEventId = eventId;
+            const token = await firebaseUser?.getIdToken();
+            const res = await fetch('/api/event/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
 
-                const participantId = await addParticipant(eventId, {
-                    userId: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    role: 'owner',
-                });
+            const data = await res.json();
 
-                await createScheduledReminder({
-                    eventId,
-                    eventTitle: eventTitle,
-                    participantId,
-                    userId: user.uid,
-                    userEmail: user.email || '',
-                    userName: user.displayName || 'User',
-                    email: recipientEmail,
-                    scheduledTime,
-                    templateId: selectedTemplateId,
-                    themeId: selectedThemeId,
-                    customMessage: customMessage || messageBody || undefined,
-                });
-
-                showToast('Mail scheduled successfully', 'success');
-                router.push(`/events/${eventId}`);
-            } else {
-                // Event type: original flow
-                const start = new Date(`${startDate}T${startTime}`);
-                const end = new Date(`${endDate}T${endTime}`);
-
-                const eventId = await createEvent({
-                    title,
-                    description,
-                    location,
-                    startTime: start,
-                    endTime: end,
-                    categoryId: '',
-                    createdBy: user.uid,
-                });
-                createdEventId = eventId;
-
-                const participantId = await addParticipant(eventId, {
-                    userId: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    role: 'owner',
-                });
-
-                await createScheduledReminder({
-                    eventId,
-                    eventTitle: title,
-                    participantId,
-                    userId: user.uid,
-                    userEmail: user.email || '',
-                    userName: user.displayName || 'User',
-                    email: recipientEmail,
-                    scheduledTime,
-                    templateId: selectedTemplateId,
-                    themeId: selectedThemeId,
-                    customMessage: customMessage || undefined,
-                });
-
-                showToast('Event created successfully', 'success');
-
-                // ── Fire-and-forget: Send invites for each added email ──
-                if (inviteEmails.length > 0 && firebaseUser) {
-                    (async () => {
-                        try {
-                            const authToken = await firebaseUser.getIdToken();
-                            const start = new Date(`${startDate}T${startTime}`);
-                            const eventTimeStr = format(start, 'EEE, MMM d \u00b7 h:mm a');
-                            let sentCount = 0;
-                            for (const email of inviteEmails) {
-                                try {
-                                    await createTokenInvite({
-                                        eventId,
-                                        eventTitle: title,
-                                        inviteeEmail: email,
-                                        role: 'viewer',
-                                        inviterName: user.displayName,
-                                        inviterEmail: user.email,
-                                        eventTime: eventTimeStr,
-                                        eventLocation: location || undefined,
-                                        authToken,
-                                    });
-                                    sentCount++;
-                                } catch {
-                                    // Individual invite failure — continue with others
-                                }
-                            }
-                            if (sentCount > 0) {
-                                showToast(`\u2713 ${sentCount} invitation${sentCount > 1 ? 's' : ''} sent`, 'success');
-                            }
-                            if (sentCount < inviteEmails.length) {
-                                showToast(`${inviteEmails.length - sentCount} invite(s) failed — retry from event page`, 'error');
-                            }
-                        } catch {
-                            // Auth failure — silently degrade
-                        }
-                    })();
-                }
-
-                router.push(`/events/${eventId}`);
+            if (!res.ok) {
+                throw new Error(data.message || 'Failed to create event');
             }
+
+            showToast('Created successfully! Hang tight, dispatching invites...', 'success');
+
+            // Redirect
+            router.push(`/events/${data.eventId}`);
+
         } catch (err) {
             console.error(err);
-            showToast(`Failed to create ${isMailType ? 'mail' : 'event'}`, 'error');
-
-            // ── Partial failure rollback — delete orphan event ──
-            if (createdEventId) {
-                try { await deleteEvent(createdEventId); } catch { /* best effort cleanup */ }
-            }
+            showToast(err instanceof Error ? err.message : 'Failed to create event', 'error');
         } finally {
             setSaving(false);
             submitLockRef.current = false;
@@ -465,43 +383,6 @@ export default function CreatePage() {
                                     <textarea className={`input-field ${styles.textarea}`} placeholder="Add agenda or details..." value={description} onChange={e => setDescription(e.target.value)} rows={3} />
                                 </div>
 
-                                {/* ── Invite Participants (Optional) ── */}
-                                <div className={styles.field}>
-                                    <label className="label"><Users size={14} /> Invite Participants (Optional)</label>
-                                    <div className={styles.chipList}>
-                                        {inviteEmails.map((email, i) => (
-                                            <span key={i} className={styles.chip}>
-                                                {email}
-                                                <button type="button" className={styles.chipRemove} onClick={() => setInviteEmails(prev => prev.filter((_, idx) => idx !== i))}>
-                                                    <XIcon size={12} />
-                                                </button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <div className={styles.inputGroup}>
-                                        <input
-                                            className="input-field"
-                                            type="email"
-                                            placeholder="Enter email & press Enter"
-                                            value={inviteInput}
-                                            onChange={e => setInviteInput(e.target.value)}
-                                            onKeyDown={e => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    const email = inviteInput.trim();
-                                                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                                    if (email && emailRegex.test(email) && !inviteEmails.includes(email)) {
-                                                        setInviteEmails(prev => [...prev, email]);
-                                                        setInviteInput('');
-                                                    } else if (email && !emailRegex.test(email)) {
-                                                        showToast('Invalid email format', 'error');
-                                                    }
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                    <p className={styles.hint}>Invitations will be sent after event creation</p>
-                                </div>
                             </>
                         )}
 
@@ -509,7 +390,9 @@ export default function CreatePage() {
                         {isMailType && (
                             <>
                                 <h2 className={styles.sectionTitle}>
-                                    {selectedType === 'important_mail' ? <><Zap size={18} /> Priority Mail</> : <><Send size={18} /> Compose Mail</>}
+                                    {selectedType === 'important_mail' ? <><Zap size={18} /> Priority Mail</> :
+                                        selectedType === 'custom_send' ? <><Users size={18} /> Custom Send Mode</> :
+                                            <><Send size={18} /> Compose Mail</>}
                                 </h2>
 
                                 <div className={styles.field}>
@@ -521,6 +404,7 @@ export default function CreatePage() {
                                     <label className="label">Message (Optional)</label>
                                     <textarea className={`input-field ${styles.textarea}`} placeholder="Write your message..." value={messageBody} onChange={e => setMessageBody(e.target.value)} rows={4} />
                                 </div>
+
                             </>
                         )}
 

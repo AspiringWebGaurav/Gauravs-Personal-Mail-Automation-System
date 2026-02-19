@@ -40,11 +40,11 @@ export class CircuitBreaker {
             // Fetch Doc
             if (db.collection) {
                 // Admin SDK
-                console.log(`[CircuitBreaker] Reading (Admin) ${ref.path}`);
+                // console.log(`[CircuitBreaker] Reading (Admin) ${ref.path}`);
                 snap = await ref.get();
             } else {
                 // Client SDK
-                console.log(`[CircuitBreaker] Reading (Client) ${ref.path}`);
+                // console.log(`[CircuitBreaker] Reading (Client) ${ref.path}`);
                 snap = await getDoc(ref);
             }
 
@@ -54,7 +54,7 @@ export class CircuitBreaker {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = (typeof (snap as any).data === 'function' ? (snap as any).data() : (snap as any).data ? (snap as any).data() : snap) as CircuitState;
 
-            console.log(`[CircuitBreaker] ${ref.path} -> Exists: ${exists}, Status: ${data?.status}`);
+            // console.log(`[CircuitBreaker] ${ref.path} -> Exists: ${exists}, Status: ${data?.status}`);
 
             if (!exists) return true; // Default closed (healthy)
 

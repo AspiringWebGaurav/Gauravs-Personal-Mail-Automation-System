@@ -29,33 +29,6 @@ export default function NotFound() {
     );
 }
 
-const buttonStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    backgroundColor: '#6c5ce7',
-    color: 'white',
-    padding: '12px 24px',
-    borderRadius: '12px',
-    textDecoration: 'none',
-    fontWeight: '600',
-    transition: 'transform 0.2s',
-    boxShadow: '0 4px 14px rgba(108, 92, 231, 0.3)'
-};
-
-const secondaryButtonStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    backgroundColor: '#1a1a2e',
-    color: '#a855f7',
-    padding: '12px 24px',
-    borderRadius: '12px',
-    textDecoration: 'none',
-    fontWeight: '600',
-    border: '1px solid #2d2d42'
-};
-
 const footerLinkStyle = {
     display: 'flex',
     alignItems: 'center',

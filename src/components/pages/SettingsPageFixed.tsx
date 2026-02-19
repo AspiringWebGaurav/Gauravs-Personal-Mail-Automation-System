@@ -17,6 +17,7 @@ import type { SystemHealthStatus, EmailProvider } from '@/types';
 import styles from './SettingsPage.module.css';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { AlertOctagon, Download } from 'lucide-react';
+import { useBurnStore } from '@/stores/burnStore';
 
 function InstallRow() {
     const { isInstallable, install } = useInstall();
@@ -369,11 +370,14 @@ export default function SettingsPage() {
     const [providerUsageMap, setProviderUsageMap] = useState<Record<string, { usedToday: number; date: string }>>({}); // Real-time per-provider usage
 
     // Listen to Emergency Stop State
+    const { safeMode } = useBurnStore();
+
     useEffect(() => {
+        if (safeMode) return; // SAFE MODE: Disable non-essential listener
         return onSnapshot(doc(db, 'systemSettings', 'globalConfig'), (snap) => {
             setIsEmergencyStop(snap.data()?.emergencyStop || false);
         });
-    }, []);
+    }, [safeMode]);
 
     const handleToggleStop = async () => {
         const newState = !isEmergencyStop;
@@ -430,15 +434,36 @@ export default function SettingsPage() {
     useEffect(() => {
         if (!user?.uid) return;
         let unsub: (() => void) | undefined;
-        try {
-            unsub = subscribeProviders(user.uid, (providerList) => {
-                setProviders(providerList);
-                setProvidersError(false);
-            });
-        } catch (e) {
-            console.warn('[Providers] Subscription init failed, using fallback:', e);
-            setProvidersError(true);
-        }
+
+        // 1. Fetch System (Env) Providers & 2. Listen to Firestore
+        const fetchSystemAndListen = async () => {
+            try {
+                // Dynamic import to avoid build issues if server action not standard
+                const { getSystemProviders } = await import('@/app/actions/getSystemProviders');
+                const rawSystemProviders = await getSystemProviders();
+
+                // Rehydrate timestamps
+                const systemProviders = rawSystemProviders.map((p: any) => ({
+                    ...p,
+                    createdAt: { toDate: () => new Date(p.createdAt.seconds * 1000) },
+                    updatedAt: { toDate: () => new Date(p.updatedAt.seconds * 1000) }
+                }));
+
+                unsub = subscribeProviders(user.uid, (firestoreProviders) => {
+                    // Merge: System providers first (as they are hard-coded/robust), then Firestore
+                    // Avoid duplicates by ID if needed, but system IDs are prefixed with 'env-'
+                    const merged = [...systemProviders, ...firestoreProviders];
+                    setProviders(merged);
+                    setProvidersError(false);
+                });
+            } catch (e) {
+                console.warn('[Providers] Subscription init failed, using fallback:', e);
+                setProvidersError(true);
+            }
+        };
+
+        fetchSystemAndListen();
+
         return () => { try { unsub?.(); } catch { /* ignore */ } };
     }, [user?.uid]);
 
@@ -447,7 +472,7 @@ export default function SettingsPage() {
     // Backend writes to providerUsage/{serviceId}, so we subscribe by serviceId
     const providerServiceIds = providers.map(p => p.serviceId || p.id).join(',');
     useEffect(() => {
-        if (!providerServiceIds) return;
+        if (!providerServiceIds || safeMode) return; // SAFE MODE: Disable heavy real-time usage tracking
         const sids = providerServiceIds.split(',');
         const today = new Date().toISOString().split('T')[0];
         const unsubs = sids.map((sid) =>
@@ -505,6 +530,10 @@ export default function SettingsPage() {
     // Reads from scheduledReminders directly — no userId filter (single-user app)
     useEffect(() => {
         if (!user?.uid) return;
+        if (safeMode) {
+            setLoadingEmails(false);
+            return; // SAFE MODE: Pause recent email feed
+        }
         setLoadingEmails(true);
 
         let unsub: (() => void) | undefined;

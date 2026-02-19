@@ -33,7 +33,11 @@ export function Footer() {
                 <span className={styles.separator}>·</span>
                 <Link href="/privacy" className={styles.legalLink}>Privacy</Link>
                 <span className={styles.separator}>·</span>
-                <Link href="/legal" className={styles.legalLink}>Legal</Link>
+                <Link href="/license" className={styles.legalLink}>License</Link>
+                <span className={styles.separator}>·</span>
+                <Link href="/cookies" className={styles.legalLink}>Cookies</Link>
+                <span className={styles.separator}>·</span>
+                <Link href="/acceptable-use" className={styles.legalLink}>AUP</Link>
             </div>
 
             <p className={styles.copyright}>

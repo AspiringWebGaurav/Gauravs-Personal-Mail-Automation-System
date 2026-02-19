@@ -16,6 +16,13 @@ export interface EmailTemplateData {
   headerText?: string;
   timeLabel?: string;
   locationLabel?: string;
+  // Action Button
+  actionUrl?: string;
+  actionLabel?: string;
+  // Dynamic Branding
+  brandName?: string;
+  productName?: string;
+  homeUrl?: string;
 }
 
 export interface EmailThemeColors {
@@ -45,13 +52,31 @@ const DEFAULT_DATA: EmailTemplateData = {
   headerText: 'Upcoming Event',
   timeLabel: 'When',
   locationLabel: 'Where',
+  brandName: 'GMSS',
+  productName: 'Enterprise',
+  homeUrl: 'https://gaurav-mail-sheduling-system.vercel.app',
 };
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function wrap(body: string, bgColor: string): string {
+// Helper: Convert Hex to RGB for rgba() usage
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+    : '108, 92, 231'; // Default backup
+}
+
+export interface RenderOptions {
+  stripEnvelope?: boolean;
+}
+
+function wrap(body: string, bgColor: string, options?: RenderOptions): string {
+  if (options?.stripEnvelope) {
+    return `<div style="background-color:${bgColor};padding:20px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${body}</div>`;
+  }
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,7 +93,7 @@ ${body}
 // ────────────────────────────────────────────────
 // LAYOUT 1: MINIMAL
 // ────────────────────────────────────────────────
-function renderMinimal(data: EmailTemplateData, theme: EmailThemeColors): string {
+function renderMinimal(data: EmailTemplateData, theme: EmailThemeColors, options?: RenderOptions): string {
   const d = { ...DEFAULT_DATA, ...data };
   const t = { ...DEFAULT_THEME, ...theme };
 
@@ -98,55 +123,81 @@ function renderMinimal(data: EmailTemplateData, theme: EmailThemeColors): string
     ${renderBrandingFooter(t)}
   </td></tr>
 </table>`;
-  return wrap(body, '#f8f9fa');
+  return wrap(body, '#f8f9fa', options);
 }
 
 // ────────────────────────────────────────────────
-// LAYOUT 2: CARD
+// HELPER: BRANDING HEADER
 // ────────────────────────────────────────────────
-function renderCard(data: EmailTemplateData, theme: EmailThemeColors): string {
+function renderBrandingHeader(theme: EmailThemeColors, data: EmailTemplateData): string {
+  const { primaryColor, textColor } = theme;
+  // We don't necessarily need RGB here unless we do transparency, but consistency is good
+  const brandName = data.brandName || "GMSS";
+  const productName = data.productName || "Enterprise";
+  const homeUrl = data.homeUrl || "#";
+
+  return `
+  <div style="padding: 16px 24px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
+    <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 700; font-size: 18px; color: ${textColor}; letter-spacing: -0.5px;">
+      ${esc(brandName)} <span style="font-weight:400;opacity:0.6;font-size:14px;">| ${esc(productName)}</span>
+    </div>
+    <div style="font-size: 12px; font-weight: 600;">
+      <a href="${esc(homeUrl)}" style="text-decoration: none; color: ${primaryColor};">Open App &rarr;</a>
+    </div>
+  </div>
+  `;
+}
+
+// ────────────────────────────────────────────────
+// LAYOUT 2: CARD (Symmetric & Simplified)
+// ────────────────────────────────────────────────
+export function renderCard(data: EmailTemplateData, theme: EmailThemeColors, options?: RenderOptions): string {
   const d = { ...DEFAULT_DATA, ...data };
   const t = { ...DEFAULT_THEME, ...theme };
 
-  const header = d.headerText || "Upcoming Event";
-  const timeLbl = d.timeLabel || "WHEN";
-  const locLbl = d.locationLabel || "WHERE";
+  const primaryRgb = hexToRgb(t.primaryColor);
 
   const body = `
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:40px auto;">
-  <tr><td>
-    <div style="background:${t.backgroundColor};border-radius:${t.borderRadius}px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,${t.primaryColor},${t.secondaryColor});padding:28px 32px;">
-        <p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">${esc(header)}</p>
-        <h1 style="margin:0;font-size:22px;color:#fff;font-weight:700;">${esc(d.eventTitle)}</h1>
-      </div>
-      <!-- Body -->
-      <div style="padding:28px 32px;">
-        <div style="display:flex;gap:12px;margin-bottom:20px;">
-          <div style="background:${t.primaryColor}15;border-radius:8px;padding:14px 18px;flex:1;">
-            <p style="margin:0 0 2px;font-size:11px;color:${t.textColor};opacity:0.5;text-transform:uppercase;">${esc(timeLbl)}</p>
-            <p style="margin:0;font-size:14px;color:${t.textColor};font-weight:600;">${esc(d.eventTime)}</p>
-          </div>
-          ${d.eventLocation ? `<div style="background:${t.primaryColor}15;border-radius:8px;padding:14px 18px;flex:1;">
-            <p style="margin:0 0 2px;font-size:11px;color:${t.textColor};opacity:0.5;text-transform:uppercase;">${esc(locLbl)}</p>
-            <p style="margin:0;font-size:14px;color:${t.textColor};font-weight:600;">${esc(d.eventLocation)}</p>
-          </div>` : ''}
-        </div>
-        ${d.message ? `<p style="margin:0 0 20px;font-size:14px;color:${t.textColor};line-height:1.6;opacity:0.85;">${esc(d.message)}</p>` : ''}
-        
-        ${renderBrandingFooter(t)}
-      </div>
-    </div>
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:500px;margin:20px auto;background:#ffffff;border:1px solid #eee;border-radius:12px;">
+  <!-- Branding Header (Centered) -->
+  <tr><td style="padding:24px 24px 16px;text-align:center;border-bottom:1px solid #f8f9fa;">
+    <span style="font-weight:700;color:${t.textColor};font-size:18px;letter-spacing:-0.5px;">${esc(d.brandName || 'GMSS')}</span>
+    <span style="color:${t.textColor};opacity:0.4;font-size:14px;">| ${esc(d.productName || 'Enterprise')}</span>
   </td></tr>
-</table>`;
-  return wrap(body, '#f0f0f5');
+
+  <!-- Main Content (Centered) -->
+  <tr><td style="padding:32px 24px;text-align:center;">
+    <p style="margin:0 0 12px;font-size:12px;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:1px;">${esc(d.headerText || 'Invitation')}</p>
+    <h1 style="margin:0 0 24px;font-size:24px;color:${t.textColor};line-height:1.3;font-weight:700;">${esc(d.eventTitle)}</h1>
+
+    <!-- PRIMARY ACTION (Centered) -->
+    ${d.actionUrl ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td align="center">
+      <a href="${esc(d.actionUrl)}" style="display:inline-block;background:${t.primaryColor};color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 4px 10px rgba(${primaryRgb}, 0.2);">${esc(d.actionLabel || 'View Details')}</a>
+    </td></tr></table>
+    <!-- Secondary Link Below Button -->
+    <p style="margin:0 0 32px;font-size:13px;">
+       <a href="${esc(d.actionUrl)}" style="color:${t.primaryColor};text-decoration:none;border-bottom:1px solid ${t.primaryColor};opacity:0.8;">Or copy link to browser</a>
+    </p>` : ''}
+
+    <div style="margin-top: 32px;"></div> <!-- Spacer -->
+
+      <!-- Footer (Centered & Minimal) -->
+      ${renderBrandingFooter(t, d.homeUrl)}
+
+    </td></tr>
+  </table>`;
+
+  if (options?.stripEnvelope) {
+    return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f4f7;padding:20px;text-align:center;">${body}</div>`;
+  }
+  return wrap(body, '#f4f4f7');
 }
 
 // ────────────────────────────────────────────────
 // LAYOUT 3: BANNER
 // ────────────────────────────────────────────────
-function renderBanner(data: EmailTemplateData, theme: EmailThemeColors): string {
+function renderBanner(data: EmailTemplateData, theme: EmailThemeColors, options?: RenderOptions): string {
   const d = { ...DEFAULT_DATA, ...data };
   const t = { ...DEFAULT_THEME, ...theme };
 
@@ -178,13 +229,13 @@ function renderBanner(data: EmailTemplateData, theme: EmailThemeColors): string 
     </div>
   </td></tr>
 </table>`;
-  return wrap(body, '#e8e8ec');
+  return wrap(body, '#e8e8ec', options);
 }
 
 // ────────────────────────────────────────────────
 // LAYOUT 4: ELEGANT
 // ────────────────────────────────────────────────
-function renderElegant(data: EmailTemplateData, theme: EmailThemeColors): string {
+function renderElegant(data: EmailTemplateData, theme: EmailThemeColors, options?: RenderOptions): string {
   const d = { ...DEFAULT_DATA, ...data };
   const t = { ...DEFAULT_THEME, ...theme };
 
@@ -223,24 +274,25 @@ function renderElegant(data: EmailTemplateData, theme: EmailThemeColors): string
     </div>
   </td></tr>
 </table>`;
-  return wrap(body, '#f5f3ef');
+  return wrap(body, '#f5f3ef', options);
 }
 
 // ── Main Export ─────────────────────────────────
 export function renderEmailTemplate(
   layout: LayoutType,
   data?: Partial<EmailTemplateData>,
-  theme?: Partial<EmailThemeColors>
+  theme?: Partial<EmailThemeColors>,
+  options?: RenderOptions
 ): string {
   const d = { ...DEFAULT_DATA, ...data } as EmailTemplateData;
   const t = { ...DEFAULT_THEME, ...theme } as EmailThemeColors;
 
   switch (layout) {
-    case 'minimal': return renderMinimal(d, t);
-    case 'card': return renderCard(d, t);
-    case 'banner': return renderBanner(d, t);
-    case 'elegant': return renderElegant(d, t);
-    default: return renderCard(d, t);
+    case 'minimal': return renderMinimal(d, t, options);
+    case 'card': return renderCard(d, t, options);
+    case 'banner': return renderBanner(d, t, options);
+    case 'elegant': return renderElegant(d, t, options);
+    default: return renderCard(d, t, options);
   }
 }
 
