@@ -1,116 +1,54 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut, type User } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '@/lib/firebase';
-import type { GMSSUser, AuthContextType } from '@/types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { usePathname, useRouter } from 'next/navigation';
+import { GlassLoader } from '@/components/ui/GlassLoader';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function useAuth(): AuthContextType {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-    return ctx;
+interface AuthContextType {
+    user: User | null;
+    loading: boolean;
 }
 
-async function getOrCreateUser(firebaseUser: User): Promise<GMSSUser> {
-    const ref = doc(db, 'users', firebaseUser.uid);
-    const snap = await getDoc(ref);
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
 
-    if (snap.exists()) {
-        const data = snap.data();
-        // Update profile if changed
-        if (
-            data.displayName !== firebaseUser.displayName ||
-            data.email !== firebaseUser.email ||
-            data.photoURL !== firebaseUser.photoURL
-        ) {
-            await setDoc(ref, {
-                displayName: firebaseUser.displayName ?? '',
-                email: firebaseUser.email ?? '',
-                photoURL: firebaseUser.photoURL ?? '',
-                updatedAt: serverTimestamp(),
-            }, { merge: true });
-        }
-        return { uid: firebaseUser.uid, ...data } as GMSSUser;
-    }
+export const useAuth = () => useContext(AuthContext);
 
-    const newUser = {
-        displayName: firebaseUser.displayName ?? '',
-        email: firebaseUser.email ?? '',
-        photoURL: firebaseUser.photoURL ?? '',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-    };
-    await setDoc(ref, newUser);
-    return { uid: firebaseUser.uid, ...newUser } as unknown as GMSSUser;
-}
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<GMSSUser | null>(null);
-    const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, async (fbUser) => {
-            if (fbUser) {
-                try {
-                    // Timeout race to prevent infinite loading if Firestore hangs (e.g. offline/persistence issues)
-                    const timeoutPromise = new Promise<never>((_, reject) =>
-                        setTimeout(() => reject(new Error('Auth profile fetch timed out')), 10000)
-                    );
-
-                    const gmssUser = await Promise.race([
-                        getOrCreateUser(fbUser),
-                        timeoutPromise
-                    ]);
-
-                    setFirebaseUser(fbUser);
-                    setUser(gmssUser);
-                } catch (err) {
-                    console.warn('Auth profile fetch failed/timed out, using fallback:', err);
-
-                    // Fallback: Use basic Firebase user data so the app loads
-                    const fallbackUser: GMSSUser = {
-                        uid: fbUser.uid,
-                        displayName: fbUser.displayName || 'User',
-                        email: fbUser.email || '',
-                        photoURL: fbUser.photoURL || '',
-                        createdAt: Timestamp.now(),
-                        updatedAt: Timestamp.now(),
-                    };
-
-                    setFirebaseUser(fbUser);
-                    setUser(fallbackUser);
-                }
-            } else {
-                setFirebaseUser(null);
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            // Re-verify the strict email constraint globally, just in case
+            if (currentUser && currentUser.email !== 'gauravpatil9262@gmail.com') {
+                auth.signOut();
                 setUser(null);
+            } else {
+                setUser(currentUser);
             }
             setLoading(false);
         });
-        return () => unsub();
+
+        return () => unsubscribe();
     }, []);
 
-    const signInWithGoogle = useCallback(async () => {
-        try {
-            await signInWithPopup(auth, googleProvider);
-        } catch (err) {
-            console.error('Sign-in error:', err);
-            throw err;
+    useEffect(() => {
+        if (!loading) {
+            const isPublicRoute = pathname === '/login' || pathname.startsWith('/invite/');
+            if (!user && !isPublicRoute) {
+                router.push('/login');
+            }
         }
-    }, []);
-
-    const signOutUser = useCallback(async () => {
-        await firebaseSignOut(auth);
-        setUser(null);
-        setFirebaseUser(null);
-    }, []);
+    }, [user, loading, pathname, router]);
 
     return (
-        <AuthContext.Provider value={{ user, firebaseUser, loading, signInWithGoogle, signOut: signOutUser }}>
+        <AuthContext.Provider value={{ user, loading }}>
             {children}
+            {loading && <GlassLoader />}
         </AuthContext.Provider>
     );
 }
