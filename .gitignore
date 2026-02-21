@@ -38,10 +38,57 @@ failed-reference-only/
 failed-reference-only
 
 # Editor directories and files
-.idea
-.vscode
+.idea/
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# ──────────────────────────────────────────────────────────────
+# 🛑 ENTERPRISE SECURITY & HARDENING LOCKDOWN 
+# ──────────────────────────────────────────────────────────────
+
+# Telemetry & QA Dumps
+*.log
+qa_*.txt
+hard_qa*.txt
+adaptive_qa*.txt
+lint_error.txt
+zero-check.log
+/scripts/qa-*/docs/
+/scripts/logs/
+
+# Firebase Emulators & Configs
+.firebase/
+firebase-debug.log
+firebase-export/
+firestore-debug.log
+
+# Key Files & Cryptography
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.snk
+
+# System Secrets
+.env*
+!.env.example
+.vercel/
+.npmrc
+.yarnrc
+
+# OS Dumps
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.sqlite3
+
+# Vercel & Deployments
+.turbo/
+.vercel_build_output/

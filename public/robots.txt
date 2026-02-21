@@ -1,0 +1,10 @@
+# GMSS Robots.txt
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /diagnostics
+Disallow: /settings/
+
+Sitemap: https://gmss.vercel.app/sitemap.xml

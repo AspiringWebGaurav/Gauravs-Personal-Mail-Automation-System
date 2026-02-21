@@ -1,0 +1,374 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: var(--z-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+}
+
+.modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 1000px;
+    height: 90vh;
+    /* Fixed height for consistency */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow-2xl);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ── Header ────────────────────────────────────────── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+.title h2 {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.closeBtn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* ── Content Body ───────────────────────────────────── */
+.body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ── Config Panel (Left) ────────────────────────────── */
+.configPanel {
+    width: 50%;
+    min-width: 320px;
+    padding: var(--space-6);
+    overflow-y: auto;
+    border-right: 1px solid var(--border-color);
+    background: var(--bg-subtle);
+}
+
+/* Config: Filter Bar */
+.filterBar {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+}
+
+.filterChip {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.filterChip:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.activeFilter {
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Config: Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-4);
+    padding-bottom: var(--space-8);
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.cardActive {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.cardEmoji {
+    font-size: 24px;
+    margin-bottom: var(--space-2);
+    display: block;
+}
+
+.cardName {
+    font-size: var(--text-base);
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+    color: var(--text-primary);
+}
+
+.cardMeta {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Config: Theme Selector */
+.themeSection {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-top: var(--space-6);
+    box-shadow: var(--shadow-md);
+    animation: fadeIn 0.3s;
+}
+
+.sectionTitle {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.themeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: var(--space-2);
+}
+
+.themeBtn {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.themeBtn:hover {
+    transform: scale(1.1);
+}
+
+.themeActive {
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+/* ── Preview Panel (Right) ──────────────────────────── */
+.previewPanel {
+    flex: 1;
+    padding: var(--space-8);
+    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+}
+
+.emptyState {
+    text-align: center;
+    color: var(--text-tertiary);
+}
+
+.mobilePreviewContainer {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 20px;
+    border: 8px solid #2d3748;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: var(--shadow-2xl);
+    height: 100%;
+    max-height: 600px;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+.footer {
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    background: var(--bg-card);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsiveness */
+/* ── Mobile Tabs ── */
+.mobileTabs {
+    display: none;
+    /* Hidden on desktop */
+}
+
+.searchBarContainer {
+    padding: var(--space-4) var(--space-6);
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    display: none;
+    /* Hidden on desktop, usually inline in header */
+}
+
+/* ── Mobile Responsiveness ── */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .title {
+        display: none;
+        /* Simplify header on mobile */
+    }
+
+    .closeBtn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
+
+    .mobileTabs {
+        display: flex;
+        background: var(--bg-tertiary);
+        padding: 4px;
+        border-radius: var(--radius-lg);
+        margin-right: 48px;
+        /* Space for close btn */
+    }
+
+    .mobileTabBtn {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 8px;
+        border-radius: var(--radius-md);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+    }
+
+    .mobileTabActive {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .searchBarContainer {
+        display: block;
+        /* Show explicit search bar row */
+        padding: var(--space-2) var(--space-4);
+    }
+
+    .body {
+        flex-direction: column;
+        overflow: hidden;
+        /* Body doesn't scroll, panels do */
+    }
+
+    .configPanel,
+    .previewPanel {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        padding: var(--space-4);
+    }
+
+    .hiddenOnMobile {
+        display: none !important;
+    }
+
+    .modal {
+        height: 100dvh;
+        border-radius: 0;
+        max-width: 100%;
+    }
+
+    /* Hide desktop search in header */
+    .header input {
+        display: none;
+    }
+
+    .header .input-field {
+        display: none;
+    }
+}
