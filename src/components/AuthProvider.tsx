@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import { auth } from "@/lib/firebase/client";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter, usePathname } from "next/navigation";
-import GlassLoader from "./GlassLoader";
+import { GlobalLoader } from "./ui/GlobalLoader";
 
 const ALLOWED_EMAIL = "gauravpatil9262@gmail.com";
 const PUBLIC_ROUTES = ["/login", "/invite"];
@@ -47,7 +47,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     }, [user, loading, pathname, router]);
 
     if (loading) {
-        return <GlassLoader fullScreen />;
+        return <GlobalLoader variant="fullscreen" />;
     }
 
     // Still block render if not user and not public route (waiting for router push)

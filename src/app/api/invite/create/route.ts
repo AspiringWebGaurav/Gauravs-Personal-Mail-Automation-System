@@ -110,7 +110,7 @@ export async function POST(req: Request) {
         await batch.commit();
 
         return NextResponse.json({ success: true, inviteId: inviteRef.id });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Invite Create Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

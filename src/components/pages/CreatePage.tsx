@@ -3,28 +3,18 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore as useAuth } from '@/store/authStore';
-import { createEvent, deleteEvent } from '@/services/eventService';
-import { addParticipant, createScheduledReminder } from '@/services/participantServiceFixed';
-import { createTokenInvite } from '@/services/invitationService';
+
 import { useAppStore } from '@/stores/appStore';
 import { getTemplates } from '@/services/templateService';
-import { getThemes } from '@/services/themeService';
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarPlus, ArrowLeft, ArrowRight, Palette, Clock, MapPin, AlignLeft, User, Users, X as XIcon, Mail, AlertTriangle, Zap, Send } from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarPlus, ArrowLeft, ArrowRight, Palette, Clock, MapPin, AlignLeft, User, Users, Mail, AlertTriangle, Zap, Send } from 'lucide-react';
 import Link from 'next/link';
-import type { EmailTemplate, EmailTheme } from '@/types';
+import type { EmailTemplate } from '@/types';
+import { getVariableUILabel, extractTemplateVariables } from '@/utils/templateUtils';
 import styles from './CreatePage.module.css';
-import dynamic from 'next/dynamic';
-import { InviteInput } from '@/components/ui/InviteInput';
 
-const TemplateGallery = dynamic(() => import('@/components/email/TemplateGallery').then(mod => mod.TemplateGallery), {
-    loading: () => null,
-    ssr: false // Client-side only modal
-});
 
-const DEFAULT_TEMPLATE_ID = 'sys_template_prof_reminder';
-const DEFAULT_THEME_ID = 'sys_theme_modern_blue';
 
 /* ── Type definitions for the modular create flow ── */
 type CreateType = 'event' | 'send_mail' | 'important_mail' | 'custom_send';
@@ -72,7 +62,7 @@ const CREATE_TYPES: CreateTypeConfig[] = [
 type ScheduleMode = 'before_event' | 'exact_time';
 
 export default function CreatePage() {
-    const { user, user } = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
     const showToast = useAppStore((s) => s.showToast);
 
@@ -107,14 +97,12 @@ export default function CreatePage() {
     const [pastTimeWarning, setPastTimeWarning] = useState(false);
 
     // Design State
-    const [selectedTemplateId, setSelectedTemplateId] = useState(DEFAULT_TEMPLATE_ID);
-    const [selectedThemeId, setSelectedThemeId] = useState(DEFAULT_THEME_ID);
-    const [customMessage, setCustomMessage] = useState('');
-    const [showGallery, setShowGallery] = useState(false);
+    const [selectedTemplateId, setSelectedTemplateId] = useState('');
+
+    const [reminderVars, setReminderVars] = useState<Record<string, string>>({});
 
     // Data for lookup
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-    const [themes, setThemes] = useState<EmailTheme[]>([]);
     const [saving, setSaving] = useState(false);
     const submitLockRef = useRef(false); // Hard lock — survives React re-renders
 
@@ -123,22 +111,40 @@ export default function CreatePage() {
         if (user && !recipientEmail) setRecipientEmail(user.email || '');
     }, [user, recipientEmail]);
 
-    // Load templates/themes for names
+    // Auto-fill variables when template changes
+    useEffect(() => {
+        if (!selectedTemplateId) {
+            setReminderVars({});
+            return;
+        }
+
+        const template = templates.find(t => t.id === selectedTemplateId);
+        if (template?.messageBody) {
+            const vars = extractTemplateVariables(template.messageBody);
+            const initialVars: Record<string, string> = {};
+            vars.forEach(v => { initialVars[v] = ''; });
+            setReminderVars(initialVars);
+        } else {
+            setReminderVars({});
+        }
+    }, [selectedTemplateId, templates]);
+
+    // Load templates for names
     useEffect(() => {
         if (!user) return;
-        Promise.all([getTemplates(user.uid), getThemes(user.uid)]).then(([tpls, thms]) => {
-            setTemplates(tpls);
-            setThemes(thms);
+        getTemplates(user.uid).then(tpls => {
+            const userTpls = tpls.filter(t => !t.id.startsWith('sys_'));
+            setTemplates(userTpls);
+            if (userTpls.length > 0) setSelectedTemplateId(userTpls[0].id);
         });
     }, [user]);
 
-    // Auto-select urgent templates for important mail
+    // Auto-select urgent template if applicable
     useEffect(() => {
-        if (selectedType === 'important_mail') {
-            const urgentTemplate = templates.find(t => t.id === 'sys_template_urgent_alert');
-            if (urgentTemplate) setSelectedTemplateId(urgentTemplate.id);
-        } else {
-            setSelectedTemplateId(DEFAULT_TEMPLATE_ID);
+        if (selectedType === 'important_mail' && templates.length > 0) {
+            setSelectedTemplateId(templates[0].id);
+        } else if (templates.length > 0) {
+            setSelectedTemplateId(templates[0].id);
         }
     }, [selectedType, templates]);
 
@@ -153,8 +159,7 @@ export default function CreatePage() {
     }, [scheduleMode, exactDate, exactTime]);
 
     // Derived Selection Display
-    const selectedTemplate = useMemo(() => templates.find(t => t.id === selectedTemplateId), [templates, selectedTemplateId]);
-    const selectedTheme = useMemo(() => themes.find(t => t.id === selectedThemeId), [themes, selectedThemeId]);
+
 
     const isMailType = selectedType === 'send_mail' || selectedType === 'important_mail' || selectedType === 'custom_send';
 
@@ -227,6 +232,7 @@ export default function CreatePage() {
                 subject: subject,
                 recipientEmail: recipientEmail,
                 reminderTiming: reminderTiming,
+                customMessage: Object.keys(reminderVars).length > 0 ? JSON.stringify(reminderVars) : undefined,
                 // Timezone could be passed here if collected
             };
 
@@ -266,7 +272,7 @@ export default function CreatePage() {
             <div className="page-container">
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={styles.topBar}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Link href="/" className={styles.backBtn}><ArrowLeft size={20} /></Link>
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', flexShrink: 0 }}><ArrowLeft size={18} /></Link>
                         <h1 className="page-title">Create New</h1>
                     </div>
                 </motion.div>
@@ -317,10 +323,10 @@ export default function CreatePage() {
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={styles.topBar}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <button
-                        className={styles.backBtn}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', flexShrink: 0, padding: 0 }}
                         onClick={() => step === 1 ? setSelectedType(null) : setStep(1)}
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={18} />
                     </button>
                     <div>
                         <h1 className="page-title" style={{ fontSize: 'var(--text-lg)' }}>{currentTypeConfig.label}</h1>
@@ -478,30 +484,57 @@ export default function CreatePage() {
                             )}
                         </div>
 
-                        {/* Design Card */}
+                        {/* Template Selection */}
                         <div className={styles.field}>
-                            <label className="label"><Palette size={14} /> Email Design</label>
-                            <div className={`card ${styles.designCard}`} onClick={() => setShowGallery(true)}>
-                                <div className={styles.designPreview} style={{ background: selectedTheme ? selectedTheme.primaryColor : '#eee' }}>
-                                    <span style={{ fontSize: 20 }}>
-                                        {selectedTemplate?.layoutType === 'minimal' ? '📝' :
-                                            selectedTemplate?.layoutType === 'banner' ? '🎨' :
-                                                selectedTemplate?.layoutType === 'elegant' ? '✨' : '🃏'}
-                                    </span>
-                                </div>
-                                <div className={styles.designInfo}>
-                                    <div className={styles.designTitle}>{selectedTemplate?.name || 'Loading...'}</div>
-                                    <div className={styles.designMeta}>{selectedTheme?.name || 'Loading...'}</div>
-                                </div>
-                                <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: 12 }}>Change</button>
-                            </div>
+                            <label className="label"><Palette size={14} /> Email Template</label>
+                            <select className="input-field" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}>
+                                {templates.map(t => (
+                                    <option key={t.id} value={t.id}>{t.name} ({t.category || 'Custom'})</option>
+                                ))}
+                            </select>
                         </div>
+
+                        {/* Dynamic Variables (Mode A) */}
+                        {Object.keys(reminderVars).length > 0 && (
+                            <div style={{ marginTop: '1.25rem', background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Template Variables
+                                </h4>
+                                {Object.keys(reminderVars).map(key => (
+                                    <div key={key} className={styles.field} style={{ marginBottom: '12px' }}>
+                                        <label className="label">{getVariableUILabel(key)} <span style={{ color: '#ef4444' }}>*</span></label>
+                                        {key === 'custom_message' || key === 'custom_note' ? (
+                                            <textarea
+                                                className="input-field"
+                                                value={reminderVars[key]}
+                                                onChange={e => setReminderVars(prev => ({ ...prev, [key]: e.target.value }))}
+                                                placeholder={`Enter ${getVariableUILabel(key).toLowerCase()}...`}
+                                                rows={3}
+                                            />
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="input-field"
+                                                value={reminderVars[key]}
+                                                onChange={e => setReminderVars(prev => ({ ...prev, [key]: e.target.value }))}
+                                                placeholder={`Enter ${getVariableUILabel(key).toLowerCase()}...`}
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         <div className={styles.actions} style={{ display: 'flex', gap: 12 }}>
                             <button className="btn-secondary" onClick={() => setStep(1)} disabled={saving}>
                                 Back
                             </button>
-                            <button className="btn-primary" onClick={() => handleSubmit()} disabled={saving} style={{ flex: 1 }}>
+                            <button
+                                className="btn-primary"
+                                onClick={() => handleSubmit()}
+                                disabled={saving || Object.values(reminderVars).some(v => !v.trim())}
+                                style={{ flex: 1 }}
+                            >
                                 {saving ? 'Creating...' : (
                                     <>
                                         {isMailType ? <Send size={18} /> : <CalendarPlus size={18} />}
@@ -513,18 +546,6 @@ export default function CreatePage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            <TemplateGallery
-                isOpen={showGallery}
-                onClose={() => setShowGallery(false)}
-                currentTemplateId={selectedTemplateId}
-                currentThemeId={selectedThemeId}
-                onSelect={(tpl, thm, body) => {
-                    setSelectedTemplateId(tpl);
-                    setSelectedThemeId(thm);
-                    if (body) setCustomMessage(body);
-                }}
-            />
         </div>
     );
 }

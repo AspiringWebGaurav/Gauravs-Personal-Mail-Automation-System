@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Database and Auth disconnected for clean un-binding
 export const db = {} as any;
 export const auth = {} as any;

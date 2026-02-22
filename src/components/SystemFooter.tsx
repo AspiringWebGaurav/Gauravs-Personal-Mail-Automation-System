@@ -8,7 +8,7 @@ export default function SystemFooter() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div style={{ position: 'fixed', maxWidth: '480px', width: '100%', bottom: 0, left: '50%', transform: 'translateX(-50%)', zIndex: 10000, padding: '1rem', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <div className="system-footer-container" style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 10000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', pointerEvents: 'none' }}>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -22,7 +22,7 @@ export default function SystemFooter() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-subtle)' }}>
                             <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
                                 <Activity style={{ width: '18px', height: '18px', color: 'var(--accent-success)' }} />
-                                System Diagnostics
+                                Build Logs
                             </h3>
                             <button onClick={() => setIsOpen(false)} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', color: 'var(--text-tertiary)', background: 'transparent', transition: 'color 0.2s' }}>
                                 <X style={{ width: '16px', height: '16px' }} />
@@ -62,7 +62,7 @@ export default function SystemFooter() {
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-tertiary)', pointerEvents: 'auto', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-md)', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'all 0.2s', cursor: 'pointer' }}
             >
                 <Server style={{ width: '14px', height: '14px', color: 'var(--text-accent)' }} />
-                Syslog
+                Build Log
             </button>
         </div>
     );

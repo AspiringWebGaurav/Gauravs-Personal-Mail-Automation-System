@@ -33,8 +33,9 @@ export default function AcceptButton({ token, email }: { token: string; email: s
 
             setSuccess(true);
             router.refresh();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Error in acceptance';
+            setError(message);
         } finally {
             setIsLoading(false);
         }

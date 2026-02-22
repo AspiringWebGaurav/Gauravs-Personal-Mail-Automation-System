@@ -1,33 +1,18 @@
 export interface TemplateData {
-    eventName?: string;
-    eventTime?: string;
-    location?: string;
-    recipientName?: string;
-    inviterName?: string;
-    customMessage?: string;
-    inviteLink?: string;
+    // Dynamic dictionary
+    [key: string]: string | undefined;
 }
 
 export const TemplateEngine = {
     /**
-     * Parses a string containing placeholders like {{eventName}} and replaces them.
+     * Parses a string containing placeholders like {{var_name}} and replaces them.
      */
     render(templateHtml: string, data: TemplateData): string {
         let rendered = templateHtml;
 
-        const mappings: Record<string, string | undefined> = {
-            '{{eventName}}': data.eventName,
-            '{{eventTime}}': data.eventTime,
-            '{{location}}': data.location,
-            '{{recipientName}}': data.recipientName || 'there',
-            '{{inviterName}}': data.inviterName || 'Gaurav',
-            '{{customMessage}}': data.customMessage || '',
-            '{{inviteLink}}': data.inviteLink || '',
-        };
-
-        for (const [key, value] of Object.entries(mappings)) {
+        for (const [key, value] of Object.entries(data)) {
             // Replace globally all instances of the key
-            const regex = new RegExp(key, 'g');
+            const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
             rendered = rendered.replace(regex, value || '');
         }
 
@@ -49,7 +34,7 @@ export const TemplateEngine = {
                     </div>
                     
                     <!-- Dynamic Body -->
-                    <div style="font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.8);">
+                    <div style="font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.8); white-space: pre-wrap;">
                         ${innerHtml}
                     </div>
 

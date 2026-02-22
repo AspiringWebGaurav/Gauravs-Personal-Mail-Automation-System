@@ -24,21 +24,23 @@ interface EmailResult {
 export async function sendInviteEmail(params: SendInviteEmailParams): Promise<EmailResult> {
     const start = Date.now();
 
-    // 1. Simulation Mode Check
-    if (params.simulationMode || process.env.NEXT_PUBLIC_SIMULATION_MODE === 'true') {
-        logger.info('[Email] Legacy Simulation Mode Triggered: Skipping real send', { to: params.toEmail });
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return {
-            success: true,
-            provider: 'simulation-mock-provider',
-            durationMs: Date.now() - start,
-            simulated: true
-        };
-    }
+    // Legacy Simulation Mode Check Removed.
+    // ProviderEngine now exclusively handles simulation at the transport layer.
 
     try {
-        // Generate Dynamic HTML Body
-        const htmlBody = renderEmailTemplate('card', {
+        // Fallback HTML Body if no dynamic template provided from caller
+        const fallbackHtml = `
+            <h2>{{headerText}}</h2>
+            <p>{{message}}</p>
+            <div style="margin: 20px 0;">
+                <strong>{{timeLabel}}:</strong> {{eventTime}}<br/>
+                <strong>{{locationLabel}}:</strong> {{eventLocation}}
+            </div>
+            <a href="{{actionUrl}}" style="display:inline-block;padding:12px 24px;background-color:#6c5ce7;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">{{actionLabel}}</a>
+        `;
+
+        // Generate HTML Body using fallback (dynamic templating happens higher up if needed)
+        const htmlBody = renderEmailTemplate(fallbackHtml, {
             eventTitle: params.eventName,
             eventTime: params.eventDate,
             eventLocation: params.location,

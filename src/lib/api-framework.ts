@@ -34,8 +34,6 @@ export async function apiWrapper<T>(
     handler: () => Promise<T>
 ): Promise<NextResponse<ApiResponse<T>>> {
     const traceId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const start = Date.now();
-
     try {
         const result = await handler();
         // Track API Call Cost (Base Read)

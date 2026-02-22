@@ -18,17 +18,11 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, Clock, MapPin, Users, Plus, Trash2, Bell, Send, Edit3, Save, X, Mail, Server, RefreshCw, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import type { GPMASEvent, Participant, EmailTemplate, EmailTheme, TokenInvite } from '@/types';
-import type { LayoutType } from '@/lib/emailTemplateRenderer';
 import { EmailPreview } from '@/components/email/EmailPreview';
 import { resolveMessagePlaceholders } from '@/lib/messagePresets';
+import { getVariableUILabel, extractTemplateVariables } from '@/utils/templateUtils';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
-import dynamic from 'next/dynamic';
-
-const TemplateGallery = dynamic(() => import('@/components/email/TemplateGallery').then(mod => mod.TemplateGallery), {
-    loading: () => null,
-    ssr: false
-});
 import { subscribeToEventReminders, type EventReminderDoc } from '@/services/reminderService';
 import { getStatusConfig, isActiveStatus } from '@/lib/statusConfig';
 import styles from './EventDetailPage.module.css';
@@ -38,7 +32,7 @@ interface EventDetailPageProps {
 }
 
 export default function EventDetailPage({ eventId }: EventDetailPageProps) {
-    const { user, user } = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
     const showToast = useAppStore((s) => s.showToast);
     const { isSystemHalted } = useSystemControl(); // Access global halt state
@@ -65,10 +59,9 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
     const [reminderBase, setReminderBase] = useState<'start' | 'end'>('start');
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
     const [selectedThemeId, setSelectedThemeId] = useState('');
-    const [customMessage, setCustomMessage] = useState('');
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [themes, setThemes] = useState<EmailTheme[]>([]);
-    const [showGallery, setShowGallery] = useState(false);
+    const [reminderVars, setReminderVars] = useState<Record<string, string>>({});
 
     // ── Email Execution Log state ──
     const [eventReminders, setEventReminders] = useState<EventReminderDoc[]>([]);
@@ -101,20 +94,26 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
 
     // ── Real-time Email Execution Log subscription ──
     useEffect(() => {
-        setRemindersLoading(true);
-        setRemindersError(false);
+        const _t = setTimeout(() => {
+            setRemindersLoading(true);
+            setRemindersError(false);
+        }, 0);
         let unsub: (() => void) | undefined;
         try {
             unsub = subscribeToEventReminders(eventId, (reminders) => {
                 setEventReminders(reminders);
+                clearTimeout(_t);
                 setRemindersLoading(false);
             });
         } catch (err) {
             console.warn('[EventDetail] Reminder subscription failed:', err);
-            setRemindersError(true);
-            setRemindersLoading(false);
+            clearTimeout(_t);
+            setTimeout(() => {
+                setRemindersError(true);
+                setRemindersLoading(false);
+            }, 0);
         }
-        return () => { try { unsub?.(); } catch { /* ignore */ } };
+        return () => { clearTimeout(_t); try { unsub?.(); } catch { /* ignore */ } };
     }, [eventId]);
 
     // Load templates & themes for reminder modal
@@ -127,44 +126,19 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
     const selectedTemplate = useMemo(() => templates.find(t => t.id === selectedTemplateId), [selectedTemplateId, templates]);
     const selectedThemeObj = useMemo(() => themes.find(t => t.id === selectedThemeId), [selectedThemeId, themes]);
 
-    const previewTheme = useMemo(() => {
-        if (!selectedThemeObj) return undefined;
-        return {
-            primaryColor: selectedThemeObj.primaryColor,
-            secondaryColor: selectedThemeObj.secondaryColor,
-            backgroundColor: selectedThemeObj.backgroundColor,
-            textColor: selectedThemeObj.textColor,
-            borderRadius: selectedThemeObj.borderRadius,
-        };
-    }, [selectedThemeObj]);
-
-    const previewLayout: LayoutType = (selectedTemplate?.layoutType as LayoutType) || 'card';
-
-    // Auto-fill message when template changes
+    // Auto-fill variables when template changes
     useEffect(() => {
+        let _t: NodeJS.Timeout;
         if (selectedTemplate?.messageBody) {
-            setCustomMessage(selectedTemplate.messageBody);
-        } else if (!selectedTemplateId) {
-            setCustomMessage('Your event is coming up! Don\'t forget to prepare.');
+            const vars = extractTemplateVariables(selectedTemplate.messageBody);
+            const initialVars: Record<string, string> = {};
+            vars.forEach(v => { initialVars[v] = ''; });
+            _t = setTimeout(() => setReminderVars(initialVars), 0);
+        } else {
+            _t = setTimeout(() => setReminderVars({}), 0);
         }
+        return () => clearTimeout(_t);
     }, [selectedTemplateId, selectedTemplate]);
-
-    const resolvedPreviewMessage = useMemo(() => {
-        return resolveMessagePlaceholders(customMessage, {
-            eventTitle: event?.title || 'Your Event',
-            eventTime: event?.startTime?.toDate ? format(event.startTime.toDate(), 'EEE, MMM d · h:mm a') : 'Today',
-            location: event?.location || undefined,
-            recipientName: user?.displayName || 'User',
-        });
-    }, [customMessage, event, user]);
-
-    const previewData = useMemo(() => ({
-        eventTitle: event?.title || 'Your Event',
-        eventTime: event?.startTime?.toDate ? format(event.startTime.toDate(), 'EEE, MMM d · h:mm a') : 'Today',
-        eventLocation: event?.location || undefined,
-        message: resolvedPreviewMessage,
-        recipientName: user?.displayName || 'User',
-    }), [event, user, resolvedPreviewMessage]);
 
     const isOwner = event?.createdBy === user?.uid;
 
@@ -246,8 +220,8 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                 eventTitle: event.title,
                 inviteeEmail: capturedEmail,
                 role: capturedRole,
-                inviterName: user.displayName,
-                inviterEmail: user.email,
+                inviterName: user.displayName || 'Organizer',
+                inviterEmail: user.email || 'noreply@example.com',
                 eventTime: format(evtStart, 'EEE, MMM d \u00b7 h:mm a'),
                 eventLocation: event.location || undefined,
                 authToken,
@@ -283,7 +257,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                 eventId,
                 eventTitle: event.title,
                 fromUserId: user.uid,
-                fromName: user.displayName,
+                fromName: user.displayName || 'Organizer',
                 toEmail: capturedEmail,
                 role: capturedRole,
                 idempotencyKey,
@@ -328,11 +302,11 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                     eventTitle: event.title,
                     participantId,
                     userId: user!.uid,
-                    email: user!.email,
+                    email: user!.email || 'noreply@example.com',
                     scheduledTime,
                     templateId: selectedTemplateId || undefined,
                     themeId: selectedThemeId || undefined,
-                    customMessage: customMessage || undefined,
+                    customMessage: Object.keys(reminderVars).length > 0 ? JSON.stringify(reminderVars) : undefined,
                     idempotencyKey,
                 });
             }
@@ -346,12 +320,8 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
 
     if (loading) {
         return (
-            <div className="page-container">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-8)' }}>
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="skeleton" style={{ height: i === 1 ? 40 : 80, borderRadius: 'var(--radius-lg)' }} />
-                    ))}
-                </div>
+            <div className="page-container" style={{ position: 'relative', minHeight: '60vh' }}>
+                <GlobalLoader variant="overlay" />
             </div>
         );
     }
@@ -378,8 +348,8 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <Link href="/" className={styles.backBtn}>
-                    <ArrowLeft size={20} />
+                <Link href="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+                    <ArrowLeft size={18} />
                 </Link>
                 {isOwner && (
                     <div className={styles.headerActions}>
@@ -742,77 +712,54 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                                 </select>
                             </div>
 
-                            {/* Template & Theme Selection (New Gallery UI) */}
+                            {/* Template Selection */}
                             <div className={styles.field}>
-                                <label className="label">Design & Style</label>
-                                <div
-                                    className={`card ${styles.designSelector}`}
-                                    onClick={() => setShowGallery(true)}
-                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px' }}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{
-                                            width: 40, height: 40, borderRadius: 8,
-                                            background: selectedThemeObj ? selectedThemeObj.primaryColor : 'var(--bg-subtle)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: selectedThemeObj ? '#fff' : 'var(--text-tertiary)'
-                                        }}>
-                                            {selectedTemplate?.layoutType === 'minimal' ? '📝' :
-                                                selectedTemplate?.layoutType === 'card' ? '🃏' : '✨'}
+                                <label className="label">Email Template</label>
+                                <select className="input-field" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}>
+                                    <option value="">-- Choose Template --</option>
+                                    {templates.map(t => (
+                                        <option key={t.id} value={t.id}>{t.name} ({t.category || 'General'})</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Dynamic Variables (Mode A) */}
+                            {Object.keys(reminderVars).length > 0 && (
+                                <div style={{ marginTop: '1.25rem' }}>
+                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        Template Variables
+                                    </h4>
+                                    {Object.keys(reminderVars).map(key => (
+                                        <div key={key} className={styles.field} style={{ marginBottom: '12px' }}>
+                                            <label className="label">{getVariableUILabel(key)} <span style={{ color: '#ef4444' }}>*</span></label>
+                                            {key === 'custom_message' || key === 'custom_note' ? (
+                                                <textarea
+                                                    className="input-field"
+                                                    value={reminderVars[key]}
+                                                    onChange={e => setReminderVars(prev => ({ ...prev, [key]: e.target.value }))}
+                                                    placeholder={`Enter ${getVariableUILabel(key).toLowerCase()}...`}
+                                                    rows={3}
+                                                />
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    className="input-field"
+                                                    value={reminderVars[key]}
+                                                    onChange={e => setReminderVars(prev => ({ ...prev, [key]: e.target.value }))}
+                                                    placeholder={`Enter ${getVariableUILabel(key).toLowerCase()}...`}
+                                                />
+                                            )}
                                         </div>
-                                        <div>
-                                            <div style={{ fontWeight: 600 }}>{selectedTemplate?.name || 'Default Template'}</div>
-                                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                                                {selectedThemeObj?.name || 'Default Theme'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button className="btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }}>
-                                        Change
-                                    </button>
+                                    ))}
                                 </div>
-                            </div>
+                            )}
 
-                            <TemplateGallery
-                                isOpen={showGallery}
-                                onClose={() => setShowGallery(false)}
-                                currentTemplateId={selectedTemplateId}
-                                currentThemeId={selectedThemeId}
-                                onSelect={(tplId, thmId, body) => {
-                                    setSelectedTemplateId(tplId);
-                                    setSelectedThemeId(thmId);
-                                    if (body) setCustomMessage(body);
-                                }}
-                            />
-
-                            {/* Custom Message (Editable) */}
-
-                            {/* Custom Message */}
-                            <div className={styles.field}>
-                                <label className="label">Email Message</label>
-                                <textarea
-                                    className={`input-field ${styles.reminderMessage}`}
-                                    value={customMessage}
-                                    onChange={(e) => setCustomMessage(e.target.value)}
-                                    rows={4}
-                                    placeholder="Write the email message..."
-                                />
-                                <span className={styles.messageHint}>
-                                    Use {'{{eventTitle}}'}, {'{{eventTime}}'}, {'{{recipientName}}'} as placeholders
-                                </span>
-                            </div>
-
-                            {/* Live Email Preview */}
-                            <div className={styles.reminderPreview}>
-                                <EmailPreview
-                                    layout={previewLayout}
-                                    theme={previewTheme}
-                                    data={previewData}
-                                    height={260}
-                                />
-                            </div>
-
-                            <button className="btn-primary" onClick={() => handleSetReminder(showReminder)} style={{ width: '100%', marginTop: 12 }}>
+                            <button
+                                className="btn-primary"
+                                onClick={() => handleSetReminder(showReminder)}
+                                style={{ width: '100%', marginTop: 12 }}
+                                disabled={Object.values(reminderVars).some(v => !v.trim())}
+                            >
                                 <Bell size={16} /> Set Reminder
                             </button>
                         </motion.div>

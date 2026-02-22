@@ -59,8 +59,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const resolved = resolveTheme(theme);
-        setResolvedTheme(resolved);
+        const _t = setTimeout(() => setResolvedTheme(resolved), 0);
         applyTheme(resolved);
+        return () => clearTimeout(_t);
     }, [theme]);
 
     useEffect(() => {

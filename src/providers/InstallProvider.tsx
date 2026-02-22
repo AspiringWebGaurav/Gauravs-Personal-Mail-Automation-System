@@ -31,14 +31,16 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
+        const _t = setTimeout(() => setMounted(true), 0);
         // Check if already installed via storage or standalone mode
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in window.navigator && (window.navigator as { standalone?: boolean }).standalone);
         const storedInstalled = localStorage.getItem(STORAGE_KEYS.installed);
 
+        let _t2: NodeJS.Timeout;
         if (isStandalone || storedInstalled) {
-            setIsInstalled(true);
+            _t2 = setTimeout(() => setIsInstalled(true), 0);
         }
+        return () => { clearTimeout(_t); if (_t2) clearTimeout(_t2); };
     }, []);
 
     const isSuppressed = useCallback((): boolean => {

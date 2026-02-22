@@ -8,9 +8,6 @@
  * - Anomaly detection on hourly boundaries
  */
 
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
-
 // ── Free Tier Limits ──
 export const FREE_TIER = {
     READS_PER_DAY: 50_000,
@@ -65,7 +62,6 @@ let anomalies: BurnAnomaly[] = [];
 
 let lastLocalFlush = 0;
 let lastFirestoreFlush = -1;
-let flushUserId: string | null = null;
 let initialized = false;
 
 // Rate tracking for loop detection
@@ -339,8 +335,8 @@ async function flushToFirestore() {
 }
 
 // ── Public: Set user for Firestore flush ──
-export function setBurnUser(userId: string) {
-    flushUserId = userId;
+export function setBurnUser(_userId: string) {
+    // Disabled (Server-Side BurnEngine used)
 }
 
 // ── Public: Force flush (call on unmount / visibility change) ──

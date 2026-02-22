@@ -29,7 +29,7 @@ export async function createInvitation(data: {
     const finalIdempotencyKey = idempotencyKey || `invite_${data.eventId}_${data.toEmail}_${Date.now()}`;
 
     try {
-        const docId = await runTransaction(db, async (transaction: any) => {
+        const docId = await runTransaction(db, async (transaction) => {
             const deterministicId = `inv_${finalIdempotencyKey}`; // Use key-based ID
             // Or if we can't control ID easily (addDoc doesn't), we use doc() with generated ID.
             const docRef = doc(db, INVITATIONS_COL, deterministicId);

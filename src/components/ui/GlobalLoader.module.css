@@ -11,6 +11,28 @@
     animation: fadeIn 0.3s ease-out forwards;
 }
 
+.containerLocal {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 15, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: inherit;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.containerInline {
+    padding: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
 .glass {
     width: 120px;
     height: 120px;

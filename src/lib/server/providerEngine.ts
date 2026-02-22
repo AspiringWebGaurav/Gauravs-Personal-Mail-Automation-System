@@ -12,7 +12,7 @@ export interface EmailProvider {
     dailyQuota: number;
     usedToday: number;
     consecutiveFailures: number;
-    lastFailedAt?: any;
+    lastFailedAt?: unknown;
 
     // Adaptive Metrics
     successCount: number;
@@ -173,8 +173,9 @@ export const ProviderEngine = {
 
                 return { success: true, providerId: provider.id };
 
-            } catch (err: any) {
-                lastError = err.message || 'Unknown network logic error';
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : String(err);
+                lastError = errorMessage || 'Unknown network logic error';
 
                 // If it explicitly was our forced simulator crash, re-throw to break the MailRunner exactly
                 if (lastError === 'SIM_CRASH_AFTER_PROVIDER_BEFORE_QUOTA') throw err;

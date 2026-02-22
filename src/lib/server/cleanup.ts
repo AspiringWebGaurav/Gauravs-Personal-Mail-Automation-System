@@ -18,6 +18,7 @@ export async function cleanupExpiredInvites() {
         if (snapshot.empty) return 0;
 
         const batch = adminDb.batch();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         snapshot.docs.forEach((doc: any) => {
             batch.delete(doc.ref);
         });
@@ -64,6 +65,7 @@ export async function cleanupInviteData(inviteId: string): Promise<void> {
         const logsSnap = await adminDb.collection(INVITE_LOGS_COL)
             .where('inviteId', '==', inviteId)
             .get();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         logsSnap.docs.forEach((doc: any) => batch.delete(doc.ref));
 
         // 2. Get invite data before deletion (for in-app invitation cleanup)
@@ -81,6 +83,7 @@ export async function cleanupInviteData(inviteId: string): Promise<void> {
                 .where('toEmail', '==', inviteData.inviteeEmail)
                 .limit(1)
                 .get();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             inAppSnap.docs.forEach((doc: any) => batch.delete(doc.ref));
         }
 

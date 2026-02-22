@@ -1,156 +1,168 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { subscribeToUserEvents } from '@/services/eventService';
-import { getBatchEventReminders, type EventReminderDoc } from '@/services/reminderService';
-import { EventCard } from '@/components/events/EventCard';
-import { SkeletonList } from '@/components/ui/Skeleton';
+import { subscribeProviders } from '@/services/providerService';
 import { motion } from 'framer-motion';
-import type { GPMASEvent } from '@/types';
-import styles from './HomePage.module.css';
-import { ProviderSetupBanner } from '@/components/ui/ProviderSetupBanner';
+import Link from 'next/link';
+import { CalendarPlus, Mail, Zap, Users, AlertOctagon } from 'lucide-react';
+import type { EmailProvider } from '@/types';
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
 
 export default function HomePage() {
     const { user } = useAuthStore();
-    const [events, setEvents] = useState<GPMASEvent[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [remindersMap, setRemindersMap] = useState<Record<string, EventReminderDoc[]>>({});
-    const [remindersLoading, setRemindersLoading] = useState(false);
+    const [providers, setProviders] = useState<EmailProvider[]>([]);
+    const [loadingProviders, setLoadingProviders] = useState(true);
 
-    // ── Real-time events subscription ──
     useEffect(() => {
         if (!user) return;
-
-        const safetyTimer = setTimeout(() => {
-            setLoading(false);
-        }, 5000);
-
-        const unsub = subscribeToUserEvents(user.uid, (evts) => {
-            clearTimeout(safetyTimer);
-            setEvents(evts);
-            setLoading(false);
+        const unsub = subscribeProviders(user.uid, (data) => {
+            setProviders(data);
+            setLoadingProviders(false);
         });
-        return () => {
-            clearTimeout(safetyTimer);
-            unsub();
-        };
+        return () => unsub();
     }, [user]);
 
-    // ── Batch fetch reminders for all events (cost-safe) ──
-    useEffect(() => {
-        if (events.length === 0) {
-            setRemindersMap({});
-            return;
-        }
+    const hasProviders = providers.length > 0;
 
-        let cancelled = false;
-        setRemindersLoading(true);
-
-        const eventIds = events.map(e => e.id);
-
-        getBatchEventReminders(eventIds)
-            .then((map) => {
-                if (!cancelled) {
-                    setRemindersMap(map);
-                    setRemindersLoading(false);
-                }
-            })
-            .catch((err) => {
-                console.warn('[HomePage] Failed to fetch reminders:', err);
-                if (!cancelled) {
-                    setRemindersLoading(false);
-                }
-            });
-
-        return () => { cancelled = true; };
-    }, [events]);
-
-    const { upcoming, past } = useMemo(() => {
-        const now = Date.now();
-        const up: GPMASEvent[] = [];
-        const pa: GPMASEvent[] = [];
-        for (const e of events) {
-            const t = e.startTime?.toDate ? e.startTime.toDate().getTime() : 0;
-            if (t >= now) up.push(e);
-            else pa.push(e);
-        }
-        return { upcoming: up, past: pa };
-    }, [events]);
+    if (loadingProviders) {
+        return <GlobalLoader variant="overlay" />;
+    }
 
     return (
-        <div className="page-container">
-            <ProviderSetupBanner />
+        <div className="page-container" style={{ paddingBottom: '100px' }}>
+            {/* Top Navigation / Header */}
             <motion.div
                 className="page-header"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
+                style={{ marginBottom: '2rem' }}
             >
-                <p className={styles.greeting}>
-                    Hello, <span className={styles.name}>{user?.displayName?.split(' ')[0]}</span>
+                <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: 700 }}>Operations</h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                    Create, schedule, and dispatch intelligent emails.
                 </p>
-                <h1 className="page-title">Your Schedule</h1>
             </motion.div>
 
-            {loading ? (
-                <SkeletonList count={4} />
-            ) : events.length === 0 ? (
+            {/* Zero Provider State */}
+            {!hasProviders && (
                 <motion.div
-                    className={styles.empty}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
+                    style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        marginBottom: '2rem',
+                        display: 'flex',
+                        gap: '1rem',
+                        alignItems: 'flex-start'
+                    }}
                 >
-                    <div className={styles.emptyIcon}>📅</div>
-                    <h3>No events yet</h3>
-                    <p>Tap the + button to create your first event</p>
+                    <AlertOctagon color="#ef4444" size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div>
+                        <h3 style={{ margin: 0, color: '#ef4444', fontSize: '1.05rem', fontWeight: 600 }}>Email Provider Required</h3>
+                        <p style={{ margin: '0.5rem 0 1rem 0', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                            Add a provider to activate automation. The transaction engine is locked until an active email provider is connected.
+                        </p>
+                        <Link href="/settings/providers">
+                            <span style={{
+                                display: 'inline-block',
+                                background: '#ef4444',
+                                color: 'white',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '6px',
+                                fontSize: '0.85rem',
+                                fontWeight: 500
+                            }}>
+                                Connect Provider
+                            </span>
+                        </Link>
+                    </div>
                 </motion.div>
-            ) : (
-                <>
-                    {upcoming.length > 0 && (
-                        <section className={styles.section}>
-                            <h2 className={styles.sectionTitle}>Upcoming</h2>
-                            <div className={styles.eventList}>
-                                {upcoming.map((event, i) => (
-                                    <motion.div
-                                        key={event.id}
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.06 }}
-                                    >
-                                        <EventCard
-                                            event={event}
-                                            reminders={remindersMap[event.id]}
-                                        />
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {past.length > 0 && (
-                        <section className={styles.section}>
-                            <h2 className={styles.sectionTitle}>Past</h2>
-                            <div className={styles.eventList}>
-                                {past.map((event, i) => (
-                                    <motion.div
-                                        key={event.id}
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.06 }}
-                                    >
-                                        <EventCard
-                                            event={event}
-                                            reminders={remindersMap[event.id]}
-                                        />
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-                </>
             )}
+
+            {/* Operations Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                <ActionCard
+                    href="/create?type=event"
+                    icon={<CalendarPlus size={24} />}
+                    title="Create Event"
+                    desc="Schedule an event with automated reminders and invites."
+                    color="#6c5ce7"
+                    disabled={!hasProviders}
+                />
+                <ActionCard
+                    href="/create?type=mail"
+                    icon={<Mail size={24} />}
+                    title="Send Mail"
+                    desc="Compose a standard email with precise scheduling logic."
+                    color="#00d2ff"
+                    disabled={!hasProviders}
+                />
+                <ActionCard
+                    href="/create?type=priority"
+                    icon={<Zap size={24} />}
+                    title="Priority Mail"
+                    desc="Bypass standard queue for urgent transactional delivery."
+                    color="#ff4757"
+                    disabled={!hasProviders}
+                />
+                <ActionCard
+                    href="/create?type=custom"
+                    icon={<Users size={24} />}
+                    title="Custom Invite"
+                    desc="Mass custom send wrapper for specific participant lists."
+                    color="#fdcb6e"
+                    disabled={!hasProviders}
+                />
+            </div>
         </div>
+    );
+}
+
+function ActionCard({ href, icon, title, desc, color, disabled }: { href: string, icon: React.ReactNode, title: string, desc: string, color: string, disabled: boolean }) {
+    const Component = disabled ? 'div' : Link;
+    return (
+        <Component href={disabled ? '#' : href} style={{ textDecoration: 'none' }}>
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={!disabled ? { scale: 1.02, y: -2 } : {}}
+                whileTap={!disabled ? { scale: 0.98 } : {}}
+                style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: '16px',
+                    padding: '1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    opacity: disabled ? 0.5 : 1,
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    boxShadow: 'var(--shadow-sm)'
+                }}
+            >
+                <div style={{
+                    background: `${color}18`,
+                    color: color,
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                }}>
+                    {icon}
+                </div>
+                <div>
+                    <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)' }}>{title}</h3>
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{desc}</p>
+                </div>
+            </motion.div>
+        </Component>
     );
 }

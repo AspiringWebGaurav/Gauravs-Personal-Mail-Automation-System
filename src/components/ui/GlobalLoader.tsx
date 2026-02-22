@@ -2,9 +2,18 @@
 
 import styles from './GlobalLoader.module.css';
 
-export function GlobalLoader() {
+export interface GlobalLoaderProps {
+    variant?: 'fullscreen' | 'overlay' | 'inline';
+}
+
+export function GlobalLoader({ variant = 'fullscreen' }: GlobalLoaderProps) {
+    const containerClass =
+        variant === 'fullscreen' ? styles.container :
+            variant === 'overlay' ? styles.containerLocal :
+                styles.containerInline;
+
     return (
-        <div className={styles.container}>
+        <div className={containerClass}>
             <div className={styles.glass}>
                 <svg className={styles.logo} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="48" height="48" rx="14" fill="url(#grad_loader)" />

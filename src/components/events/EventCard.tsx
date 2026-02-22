@@ -118,7 +118,7 @@ export const EventCard = memo(function EventCard({ event, reminders }: EventCard
                             </div>
 
                             {reminders.map((r) => (
-                                <ReminderRow key={r.id} reminder={r} eventId={event.id} isPast={isPast} />
+                                <ReminderRow key={r.id} reminder={r} />
                             ))}
 
                             <div className={styles.expandedFooter}>
@@ -138,7 +138,7 @@ export const EventCard = memo(function EventCard({ event, reminders }: EventCard
 });
 
 // ── Individual Reminder Row ──
-function ReminderRow({ reminder, eventId, isPast }: { reminder: EventReminderDoc; eventId: string; isPast: boolean }) {
+function ReminderRow({ reminder }: { reminder: EventReminderDoc }) {
     const status = getStatusConfig(reminder.status);
     const active = isActiveStatus(reminder.status);
 

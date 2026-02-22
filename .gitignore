@@ -57,8 +57,13 @@ hard_qa*.txt
 adaptive_qa*.txt
 lint_error.txt
 zero-check.log
-/scripts/qa-*/docs/
-/scripts/logs/
+phase*-out.txt
+eslint-out.txt
+
+# Local Scripts (Do not upload to repo per user request)
+/scripts/
+/qa-scripts/
+*.ts.temp
 
 # Firebase Emulators & Configs
 .firebase/

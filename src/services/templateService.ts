@@ -14,6 +14,7 @@ export async function createTemplate(data: {
     layoutType: EmailTemplate['layoutType'];
     messageBody: string;
     createdBy: string;
+    category?: string;
 }): Promise<string> {
     const ref = await addDoc(collection(db, TEMPLATES_COL), {
         ...data,
@@ -36,9 +37,7 @@ export async function deleteTemplate(templateId: string): Promise<void> {
     trackDelete();
 }
 
-import { systemTemplates } from '@/lib/emailSystem';
-
-// ... (existing imports)
+import { starterTemplates } from '@/lib/emailSystem';
 
 export async function getTemplates(userId: string): Promise<EmailTemplate[]> {
     const q = query(
@@ -51,5 +50,5 @@ export async function getTemplates(userId: string): Promise<EmailTemplate[]> {
     const userTemplates = snap.docs.map((d) => ({ id: d.id, ...d.data() } as EmailTemplate));
 
     // Return System Templates + User Templates
-    return [...systemTemplates, ...userTemplates];
+    return [...starterTemplates, ...userTemplates];
 }

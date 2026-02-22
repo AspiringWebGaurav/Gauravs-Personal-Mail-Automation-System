@@ -96,14 +96,16 @@ export interface Invitation {
 }
 
 // ── Email Template ───────────────────────────────────────────
-export type LayoutType = 'minimal' | 'card' | 'banner' | 'elegant';
+export type LayoutType = 'dynamic' | 'minimal' | 'card' | 'banner' | 'elegant';
 
 export interface EmailTemplate {
     id: string;
     name: string;
     subjectFormat: string;
-    layoutType: LayoutType;
+    layoutType: LayoutType; /* soon to be exclusively 'dynamic' */
     messageBody: string;
+    variables: string[];
+    isSystem?: boolean;
     createdBy: string;
     createdAt: Timestamp;
     category?: string;

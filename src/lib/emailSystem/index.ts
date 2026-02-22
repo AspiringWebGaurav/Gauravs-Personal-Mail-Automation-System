@@ -1,2 +1,2 @@
-export * from './systemTemplates';
+export * from './starterTemplates';
 export * from './systemThemes';

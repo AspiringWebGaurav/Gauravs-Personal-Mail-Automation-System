@@ -24,12 +24,13 @@ export async function POST(req: Request) {
         const result = await DBTransactions.claimInvite({ tokenHash, userEmail });
 
         return NextResponse.json(result);
-    } catch (error: any) {
-        if (error.message === 'INVALID_TOKEN' || error.message === 'REVOKED' || error.message === 'EXPIRED') {
-            return NextResponse.json({ error: error.message }, { status: 400 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        if (message === 'INVALID_TOKEN' || message === 'REVOKED' || message === 'EXPIRED') {
+            return NextResponse.json({ error: message }, { status: 400 });
         }
-        if (error.message === 'ALREADY_ACCEPTED') {
-            return NextResponse.json({ error: 'ALREADY_ACCEPTED' }, { status: 409 });
+        if (message === 'ALREADY_ACCEPTED') {
+            return NextResponse.json({ error: message }, { status: 409 });
         }
 
         console.error('Claim error:', error);

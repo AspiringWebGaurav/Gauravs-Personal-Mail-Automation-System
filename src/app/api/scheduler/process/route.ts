@@ -31,7 +31,7 @@ export async function GET(req: Request) {
         const result = await MailRunner.processQueue();
 
         return NextResponse.json({ success: true, result });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('MailRunner Cron Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

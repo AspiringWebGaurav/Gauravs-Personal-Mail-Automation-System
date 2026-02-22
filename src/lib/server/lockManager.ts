@@ -1,6 +1,5 @@
 import 'server-only';
 import { adminDb } from '@/lib/server/admin';
-import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from '@/lib/logger';
 import { AppError } from '@/lib/api-framework';
 
@@ -25,6 +24,7 @@ export class LockManager {
         const expiresAt = now + ttlSeconds * 1000;
 
         try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return await adminDb.runTransaction(async (t: any) => {
                 const doc = await t.get(lockRef);
 

@@ -170,8 +170,9 @@ export const MailRunner = {
                         results.push({ jobId: doc.id, success: false, retrying: true });
                     }
                 }
-            } catch (jobError: any) {
-                console.error(`[MailRunner] Job ${doc.id} failed critically:`, jobError.message);
+            } catch (jobError: unknown) {
+                const errorMessage = jobError instanceof Error ? jobError.message : String(jobError);
+                console.error(`[MailRunner] Job ${doc.id} failed critically:`, errorMessage);
 
                 // Do not revert to retrying if we successfully sent the email already!
                 // Read from the DB to be absolutely certain before reverting status.
@@ -184,11 +185,11 @@ export const MailRunner = {
 
                     await doc.ref.update({
                         status: 'retrying',
-                        failureReason: `Critical error: ${jobError.message}`,
+                        failureReason: `Critical error: ${errorMessage}`,
                         scheduledTime: new Date(Date.now() + 2 * 60 * 1000),
                     });
-                } catch (_) { /* best effort recovery */ }
-                results.push({ jobId: doc.id, success: false, error: jobError.message });
+                } catch { /* best effort recovery */ }
+                results.push({ jobId: doc.id, success: false, error: errorMessage });
             }
         }
 

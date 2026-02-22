@@ -104,7 +104,7 @@ export async function createScheduledReminder(data: {
     const finalIdempotencyKey = idempotencyKey || `auto_${data.eventId}_${data.participantId}_${Date.now()}`;
 
     try {
-        const docId = await runTransaction(db, async (transaction: any) => {
+        const docId = await runTransaction(db, async (transaction) => {
             // Deterministic ID for storage-layer uniqueness
             const deterministicId = `rem_${finalIdempotencyKey}`;
             const docRef = doc(db, 'scheduledReminders', deterministicId);

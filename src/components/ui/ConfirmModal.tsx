@@ -27,8 +27,8 @@ export function ConfirmModal({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
-        return () => setMounted(false);
+        const _t = setTimeout(() => setMounted(true), 0);
+        return () => { clearTimeout(_t); setMounted(false); };
     }, []);
 
     if (!mounted) return null;

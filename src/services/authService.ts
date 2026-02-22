@@ -14,9 +14,9 @@ export const AuthService = {
             const result = await signInWithPopup(auth, provider);
             if (result.user.email !== ALLOWED_EMAIL) {
                 await signOut(auth);
-                throw new Error('Unauthorized user. Access denied.');
+                return { success: false, error: 'unauthorized', user: null };
             }
-            return result.user;
+            return { success: true, user: result.user };
         } catch (error) {
             console.error('Login failed:', error);
             throw error;
