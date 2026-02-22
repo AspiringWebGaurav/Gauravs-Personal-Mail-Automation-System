@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, CalendarDays, PlusCircle, Settings } from 'lucide-react';
+import { Home, CalendarDays, PlusCircle, Settings, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from './BottomNav.module.css';
 
@@ -10,6 +10,7 @@ const tabs = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
     { href: '/create', icon: PlusCircle, label: 'Create', isCenter: true },
+    { href: '/settings/burn-monitor', icon: Activity, label: 'Burn' },
     { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
