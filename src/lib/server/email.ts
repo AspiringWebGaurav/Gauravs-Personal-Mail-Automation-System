@@ -28,30 +28,43 @@ export async function sendInviteEmail(params: SendInviteEmailParams): Promise<Em
     // ProviderEngine now exclusively handles simulation at the transport layer.
 
     try {
-        // Fallback HTML Body if no dynamic template provided from caller
-        const fallbackHtml = `
-            <h2>{{headerText}}</h2>
-            <p>{{message}}</p>
-            <div style="margin: 20px 0;">
-                <strong>{{timeLabel}}:</strong> {{eventTime}}<br/>
-                <strong>{{locationLabel}}:</strong> {{eventLocation}}
-            </div>
-            <a href="{{actionUrl}}" style="display:inline-block;padding:12px 24px;background-color:#6c5ce7;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">{{actionLabel}}</a>
-        `;
-
-        // Generate HTML Body using fallback (dynamic templating happens higher up if needed)
-        const htmlBody = renderEmailTemplate(fallbackHtml, {
-            eventTitle: params.eventName,
-            eventTime: params.eventDate,
-            eventLocation: params.location,
-            message: `You have been invited by ${params.inviterName}. Click the button below to accept.`,
-            recipientName: params.toEmail,
-            headerText: 'You are Invited!',
-            timeLabel: 'When',
-            locationLabel: 'Where',
-            actionUrl: params.inviteUrl,
-            actionLabel: 'Accept Invitation'
-        }, undefined, { stripEnvelope: true });
+        // Generate hyper-minimal HTML Body (NVIDIA-style)
+        const htmlBody = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body style="font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #333333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+    <div style="margin-bottom: 30px;">
+        <span style="font-size: 24px; font-weight: 800; color: #76b900; letter-spacing: -0.5px;">GPMAS</span>
+    </div>
+    
+    <p style="margin-bottom: 16px;">Hello,</p>
+    
+    <p style="margin-bottom: 24px;">You have been formally invited to <strong>${params.eventName}</strong> by <strong>${params.inviterName}</strong>.</p>
+    
+    <div style="margin-bottom: 24px; padding: 16px; background-color: #f8f9fa; border-radius: 6px;">
+        <strong style="display: inline-block; margin-bottom: 8px; color: #555;">When:</strong> ${params.eventDate}<br/>
+        <strong style="display: inline-block; margin-bottom: 8px; color: #555;">Where:</strong> ${params.location}
+    </div>
+    
+    <p style="margin-bottom: 24px;">Click the button below to accept your invitation and access the event hub.</p>
+    
+    <div style="margin: 30px 0;">
+        <a href="${params.inviteUrl}" style="display: inline-block; padding: 12px 24px; background-color: #76b900; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 4px;">Accept Invitation</a>
+    </div>
+    
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eaeaea; font-size: 12px; color: #666666;">
+        <p style="margin-bottom: 8px;">If the button above does not work, copy and paste the following link into your browser:</p>
+        <p style="word-break: break-all;"><a href="${params.inviteUrl}" style="color: #76b900;">${params.inviteUrl}</a></p>
+    </div>
+    
+    <div style="margin-top: 40px; font-size: 11px; color: #999999;">
+        Sent via Gaurav's Personal Mail Automation System (GPMAS) <br/>
+        Engineered by Gaurav Patil. All rights reserved.
+    </div>
+</body>
+</html>`;
 
         // Let ProviderEngine handle DB extraction, load balancing, quotas, failover, etc.
         const sendResult = await ProviderEngine.executeSend({

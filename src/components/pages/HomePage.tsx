@@ -67,7 +67,7 @@ export default function HomePage() {
                         <p style={{ margin: '0.5rem 0 1rem 0', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
                             Add a provider to activate automation. The transaction engine is locked until an active email provider is connected.
                         </p>
-                        <Link href="/settings/providers">
+                        <Link href="/providers">
                             <span style={{
                                 display: 'inline-block',
                                 background: '#ef4444',

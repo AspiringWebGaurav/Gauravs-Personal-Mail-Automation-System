@@ -15,11 +15,14 @@ export function SSRFooter() {
                 maxWidth: '720px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '16px',
+                alignItems: 'center',
+                gap: '20px',
             }}>
                 <div style={{
                     display: 'flex',
-                    gap: '24px',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    gap: '16px 24px',
                     fontSize: '13px',
                     color: 'var(--text-secondary)'
                 }}>
@@ -30,11 +33,16 @@ export function SSRFooter() {
                     <Link href="/acceptable-use" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>AUP</Link>
                 </div>
                 <div style={{
+                    width: '100%',
                     fontSize: '12px',
                     color: 'var(--text-tertiary)',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    alignItems: 'center',
+                    textAlign: 'center'
                 }}>
                     <span>&copy; {new Date().getFullYear()} GPMAS. Enterprise Scheduling.</span>
                     <span style={{ opacity: 0.5 }}>System v1.0.0</span>

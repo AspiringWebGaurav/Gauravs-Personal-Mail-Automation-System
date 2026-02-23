@@ -153,14 +153,17 @@ export default function SettingsPageFixed() {
                     </div>
                 </div>
 
-                <button
+                <motion.button
                     className="card"
                     onClick={handleLogout}
-                    style={{ padding: '1.25rem', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', backgroundColor: 'transparent', cursor: 'pointer', marginTop: '1rem', fontWeight: 600 }}
+                    whileHover={{ scale: 1.01, backgroundColor: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.4)' }}
+                    whileTap={{ scale: 0.97, backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.5)' }}
+                    transition={{ duration: 0.2 }}
+                    style={{ padding: '1.25rem', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', backgroundColor: 'transparent', cursor: 'pointer', marginTop: '1rem', fontWeight: 600, outline: 'none' }}
                 >
                     <LogOut size={18} />
                     Sign Out
-                </button>
+                </motion.button>
             </motion.div>
 
             <ConfirmModal
@@ -177,8 +180,17 @@ export default function SettingsPageFixed() {
             />
 
             <style jsx>{`
-                .settings-row-hover:hover {
-                    background-color: var(--bg-tertiary);
+                .settings-row-hover {
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                @media (hover: hover) {
+                    .settings-row-hover:hover {
+                        background-color: var(--bg-tertiary);
+                    }
+                }
+                .settings-row-hover:active {
+                    background-color: var(--bg-elevated);
+                    transform: scale(0.98);
                 }
             `}</style>
         </div>

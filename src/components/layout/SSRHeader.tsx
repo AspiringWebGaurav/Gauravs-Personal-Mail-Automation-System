@@ -18,6 +18,7 @@ export function SSRHeader() {
                 maxWidth: '720px',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'flex-start',
                 gap: '12px'
             }}>
                 <Link href="/" style={{

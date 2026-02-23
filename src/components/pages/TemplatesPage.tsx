@@ -2,13 +2,13 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Edit3, Trash2, LayoutTemplate, AlertCircle, Send, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit3, Trash2, LayoutTemplate, AlertCircle, Send, X, Eye } from 'lucide-react';
 import Link from 'next/link';
 import type { EmailTemplate } from '@/types';
 import { getTemplates, createTemplate, updateTemplate, deleteTemplate } from '@/services/templateService';
 import { useAuthStore as useAuth } from '@/store/authStore';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
-import { extractTemplateVariables } from '@/lib/emailTemplateRenderer';
+import { extractTemplateVariables, renderEmailTemplate } from '@/lib/emailTemplateRenderer';
 import { getVariableUILabel } from '@/utils/templateUtils';
 import { useAppStore } from '@/stores/appStore';
 import styles from './TemplatesPage.module.css';
@@ -29,6 +29,8 @@ export default function TemplatesPage() {
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [saving, setSaving] = useState(false);
+    const [previewMode, setPreviewMode] = useState(false);
+    const [isSystem, setIsSystem] = useState(false);
 
     // Quick Send State (Mode B)
     const [quickSendTpl, setQuickSendTpl] = useState<EmailTemplate | null>(null);
@@ -62,6 +64,8 @@ export default function TemplatesPage() {
         setCategory('General');
         setSubject('{{event_title}}');
         setBody('Hello {{recipient_name}},\n\nYour event "{{event_title}}" is happening at {{event_time}}.\n\n{{custom_message}}\n\nRegards,\nTeam');
+        setPreviewMode(false);
+        setIsSystem(false);
         setView('edit');
     };
 
@@ -71,6 +75,8 @@ export default function TemplatesPage() {
         setCategory(tpl.category || 'General');
         setSubject(tpl.subjectFormat);
         setBody(tpl.messageBody);
+        setIsSystem(tpl.isSystem || false);
+        setPreviewMode(tpl.isSystem || false); // Force preview mode initially for system templates
         setView('edit');
     };
 
@@ -236,9 +242,13 @@ export default function TemplatesPage() {
                                                 <button className={styles.actionBtn} onClick={() => handleOpenQuickSend(t)} title="Quick Send">
                                                     <Send size={18} />
                                                 </button>
-                                                {!t.isSystem && (
+                                                {!t.isSystem ? (
                                                     <button className={styles.actionBtn} onClick={() => handleEdit(t)} title="Edit">
                                                         <Edit3 size={18} />
+                                                    </button>
+                                                ) : (
+                                                    <button className={styles.actionBtn} onClick={() => handleEdit(t)} title="Preview Template">
+                                                        <Eye size={18} />
                                                     </button>
                                                 )}
                                                 {!t.isSystem && (
@@ -256,27 +266,43 @@ export default function TemplatesPage() {
                 ) : (
                     <motion.div key="edit" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className={styles.editForm}>
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
-                            {editId ? 'Edit Template' : 'Create Template'}
+                            {isSystem ? 'Preview System Template' : editId ? 'Edit Template' : 'Create Template'}
                         </h2>
 
                         <div className={styles.fieldGroup}>
                             <label>Template Name</label>
-                            <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Monthly Newsletter" required />
+                            <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Monthly Newsletter" required disabled={isSystem} />
                         </div>
 
                         <div className={styles.fieldGroup}>
                             <label>Category</label>
-                            <input className="input-field" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Marketing, Update" />
+                            <input className="input-field" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Marketing, Update" disabled={isSystem} />
                         </div>
 
                         <div className={styles.fieldGroup}>
                             <label>Subject Format (Supports Variables)</label>
-                            <input className="input-field" value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Update: {{event_title}}" required />
+                            <input className="input-field" value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Update: {{event_title}}" required disabled={isSystem} />
                         </div>
 
                         <div className={styles.fieldGroup}>
-                            <label>Body (HTML Supported)</label>
-                            <textarea className="input-field" style={{ minHeight: '150px', fontFamily: 'monospace', fontSize: '13px' }} value={body} onChange={e => setBody(e.target.value)} placeholder="Write your dynamic email template here..." required />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <label>Body (HTML Supported)</label>
+                                <div className={styles.tabToggle}>
+                                    <button onClick={() => setPreviewMode(false)} className={!previewMode ? styles.activeTab : styles.inactiveTab}>Logic</button>
+                                    <button onClick={() => setPreviewMode(true)} className={previewMode ? styles.activeTab : styles.inactiveTab}>Preview</button>
+                                </div>
+                            </div>
+                            {!previewMode ? (
+                                <textarea className="input-field" style={{ minHeight: '150px', fontFamily: 'monospace', fontSize: '13px' }} value={body} onChange={e => setBody(e.target.value)} placeholder="Write your dynamic email template here..." required disabled={isSystem} />
+                            ) : (
+                                <div className={styles.previewContainer}>
+                                    <iframe
+                                        title="Email Preview"
+                                        srcDoc={renderEmailTemplate(body, detectedVars.reduce((acc, v) => ({ ...acc, [v]: `[${getVariableUILabel(v)}]` }), {}))}
+                                        style={{ width: '100%', height: '400px', border: 'none', background: '#f1f5f9' }}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className={`${styles.variablesBox} ${detectedVars.length === 0 ? styles.error : ''}`}>
@@ -297,10 +323,14 @@ export default function TemplatesPage() {
                         </div>
 
                         <div className={styles.formActions}>
-                            <button className="btn-secondary" onClick={() => setView('list')} disabled={saving}>Cancel</button>
-                            <button className="btn-primary" onClick={handleSave} disabled={saving || detectedVars.length === 0}>
-                                {saving ? 'Saving...' : 'Save Template'}
+                            <button className="btn-secondary" onClick={() => setView('list')} disabled={saving}>
+                                {isSystem ? 'Close' : 'Cancel'}
                             </button>
+                            {!isSystem && (
+                                <button className="btn-primary" onClick={handleSave} disabled={saving || detectedVars.length === 0}>
+                                    {saving ? 'Saving...' : 'Save Template'}
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 )}

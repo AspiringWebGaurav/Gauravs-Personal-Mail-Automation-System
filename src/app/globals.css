@@ -317,7 +317,7 @@ h6 {
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: translateY(1px) scale(0.96);
   box-shadow: var(--shadow-sm);
 }
 
@@ -341,6 +341,11 @@ h6 {
   border-color: var(--border-strong);
 }
 
+.btn-secondary:active {
+  transform: translateY(1px) scale(0.96);
+  background: var(--bg-card-hover);
+}
+
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -355,6 +360,13 @@ h6 {
   background: var(--bg-card-hover);
   border-color: var(--border-default);
   box-shadow: var(--shadow-md);
+}
+
+a.card:active,
+button.card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-card-hover);
 }
 
 .input-field {
