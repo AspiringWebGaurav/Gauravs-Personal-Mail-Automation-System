@@ -1,16 +1,17 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BellOff, Download, RotateCcw, X } from 'lucide-react';
+import { Bell, BellOff, Download, RotateCcw, X, MoreVertical, ShieldBan } from 'lucide-react';
 import { useState } from 'react';
 import { useInstall } from '@/providers/InstallProvider';
 import styles from './InstallPrompt.module.css';
 
 const SNOOZE_OPTIONS = [
-    { label: 'Remind me later', icon: Bell, minutes: 0 }, // Just dismisses for now
+    { label: 'Remind me later', icon: Bell, minutes: 0 },
     { label: 'Silence for 1 hour', icon: BellOff, minutes: 60 },
     { label: 'Silence for 24 hours', icon: BellOff, minutes: 1440 },
     { label: 'Don\'t ask again this session', icon: RotateCcw, minutes: -1 },
+    { label: 'Never ask on this device', icon: ShieldBan, minutes: 525600 },
 ] as const;
 
 export function InstallPrompt() {
@@ -60,9 +61,18 @@ export function InstallPrompt() {
                                 Install
                             </motion.button>
                             <button
-                                className={styles.closeBtn}
+                                className={`${styles.iconBtn} ${showSnooze ? styles.activeIconBtn : ''}`}
                                 onClick={() => setShowSnooze(!showSnooze)}
-                                aria-label="Dismiss options"
+                                aria-label="More options"
+                                title="Installation Options"
+                            >
+                                <MoreVertical size={20} />
+                            </button>
+                            <button
+                                className={styles.iconBtn}
+                                onClick={() => handleSnooze(0)}
+                                aria-label="Dismiss"
+                                title="Dismiss"
                             >
                                 <X size={20} />
                             </button>

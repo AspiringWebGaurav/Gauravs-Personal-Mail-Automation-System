@@ -1,41 +1,78 @@
 .nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: calc(var(--safe-bottom, 0px) + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: calc(var(--max-width, 500px) - 32px);
     z-index: var(--z-nav);
-    background: rgba(22, 22, 31, 0.85);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    /* Rich, foggy tint that masks background reading while feeling like frosted glass */
+    background: linear-gradient(to bottom,
+            rgba(26, 26, 36, 0.90),
+            rgba(16, 16, 24, 0.95));
+
+    /* Soft top edge highlight */
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: var(--safe-bottom);
+    border-radius: 40px;
+    /* Restoring pill corners for mobile/desktop column harmony */
+
+    /* Beautiful ambient floating shadow */
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.05),
+        0 8px 32px rgba(0, 0, 0, 0.5),
+        0 0 1px rgba(0, 0, 0, 1);
+    /* Sharp containment edge */
+
+    padding: 0 8px;
+    /* Slightly tighter horizontal padding */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 🔥 ADD THIS — This is the missing fog layer */
+.nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+
+    /* Soft diffusion layer */
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0.06),
+            rgba(255, 255, 255, 0.02));
+
+    pointer-events: none;
 }
 
 .inner {
-    max-width: var(--max-width);
-    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    height: var(--bottom-nav-height);
-    padding: 0 var(--space-2);
+    /* Distribute evenly */
+    height: 56px;
+    /* Optimum touch height for mobile */
 }
 
 .tab {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    padding: var(--space-2) var(--space-3);
-    color: var(--text-tertiary);
-    transition: color var(--transition-fast);
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 0;
+    /* Removing side padding for more even distribution */
+    color: rgba(255, 255, 255, 0.35);
+    /* soft inactive text */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-tap-highlight-color: transparent;
     position: relative;
-    min-width: 56px;
+    flex: 1;
+    /* Make tabs fill available space purely evenly */
+    height: 100%;
 }
 
 .tab.active {
-    color: var(--accent-primary);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .iconWrap {
@@ -43,26 +80,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.tab.active .iconWrap {
+    background: rgba(255, 255, 255, 0.05);
+    /* Softer highlight */
+}
+
+/* Hide legacy neon dot, replace with the soft background highlight */
 .indicator {
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--accent-primary);
-    box-shadow: 0 0 8px var(--accent-primary-glow);
+    display: none;
 }
 
 .label {
     font-size: 10px;
-    font-weight: var(--weight-medium);
+    font-weight: 500;
     letter-spacing: 0.02em;
+    opacity: 0.8;
 }
 
 /* ── Center Create Button ──────────────────────────────── */
