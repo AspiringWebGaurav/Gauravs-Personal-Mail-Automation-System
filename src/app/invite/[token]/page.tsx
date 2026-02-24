@@ -1,8 +1,15 @@
 import { adminDb } from "@/lib/firebase/admin";
 import crypto from "crypto";
 import AcceptButton from "@/components/AcceptButton";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+    title: 'Event Invitation | GPMAS',
+    description: 'You have been invited to an event via Gaurav\'s Personal Mail Automation System.',
+    robots: { index: false, follow: false },
+};
 
 export default async function InvitePage({ params }: { params: { token: string } }) {
     const { token } = await params;

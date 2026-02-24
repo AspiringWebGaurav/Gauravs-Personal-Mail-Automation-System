@@ -1,4 +1,11 @@
 import { SSRShell } from '@/components/layout/SSRShell';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Privacy Policy | GPMAS',
+    description: 'Privacy Policy for Gaurav\'s Personal Mail Automation System. Learn how your data is collected, used, and protected.',
+    alternates: { canonical: 'https://gpmas.vercel.app/privacy' },
+};
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
     <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '32px', marginBottom: '16px' }}>{children}</h2>

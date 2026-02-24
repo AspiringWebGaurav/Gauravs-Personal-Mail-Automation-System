@@ -18,8 +18,8 @@ const inter = Inter({
 const APP_URL = 'https://gpmas.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'GPMAS — Gaurav\'s Mail Scheduler System',
-  description: 'Smart, automated email scheduling and reminder system. Multi-provider load balancing, disaster recovery, and precision scheduling — built and engineered by Gaurav Patil.',
+  title: 'GPMAS | Smart Mail Scheduling & Automation',
+  description: 'Gaurav\'s Personal Mail Automation System — Enterprise-grade email scheduling with multi-provider routing, intelligent failover, and real-time delivery tracking. Built by Gaurav Patil.',
   manifest: '/manifest.json',
   applicationName: 'GPMAS',
   authors: [{ name: 'Gaurav Patil', url: 'https://www.gauravpatil.online' }],
@@ -40,25 +40,25 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: APP_URL,
-    title: 'GPMAS — Smart Email Scheduling & Automation',
-    description: 'Automated email scheduling with multi-provider load balancing, disaster recovery, and precision timing. Built by Gaurav Patil.',
+    title: 'GPMAS | Smart Mail Scheduling & Automation',
+    description: 'Gaurav\'s Personal Mail Automation System — Enterprise-grade email scheduling with multi-provider routing, intelligent failover, and real-time delivery tracking.',
     siteName: 'GPMAS',
     images: [
       {
-        url: `${APP_URL}/og-image.svg`,
+        url: `${APP_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'GPMAS — Gaurav\'s Mail Scheduler System',
-        type: 'image/svg+xml',
+        alt: 'GPMAS — Gaurav\'s Personal Mail Automation System',
+        type: 'image/png',
       },
     ],
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GPMAS — Smart Email Scheduling & Automation',
-    description: 'Automated email scheduling with multi-provider load balancing and disaster recovery.',
-    images: [`${APP_URL}/og-image.svg`],
+    title: 'GPMAS | Smart Mail Scheduling & Automation',
+    description: 'Gaurav\'s Personal Mail Automation System — Enterprise-grade email scheduling with intelligent multi-provider routing and failover.',
+    images: [`${APP_URL}/og-image.png`],
     creator: '@gauravpatil',
   },
   appleWebApp: {
@@ -90,8 +90,8 @@ export const viewport: Viewport = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'GPMAS — Gaurav\'s Mail Scheduler System',
-  description: 'Smart, automated email scheduling and reminder system with multi-provider load balancing.',
+  name: 'GPMAS — Gaurav\'s Personal Mail Automation System',
+  description: 'Enterprise-grade email scheduling with multi-provider routing, intelligent failover, and real-time delivery tracking.',
   url: APP_URL,
   applicationCategory: 'Productivity',
   operatingSystem: 'Web',

@@ -1,6 +1,13 @@
 import { SSRShell } from '@/components/layout/SSRShell';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-static';
+
+export const metadata: Metadata = {
+    title: 'License | GPMAS',
+    description: 'Private Use License for Gaurav\'s Personal Mail Automation System. All intellectual property rights reserved by Gaurav Patil.',
+    alternates: { canonical: 'https://gpmas.vercel.app/license' },
+};
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
     <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '32px', marginBottom: '16px' }}>{children}</h2>

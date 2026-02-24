@@ -8,7 +8,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { GlobalLoader } from "./ui/GlobalLoader";
 
 const ALLOWED_EMAIL = "gauravpatil9262@gmail.com";
-const PUBLIC_ROUTES = ["/login", "/invite"];
+const PUBLIC_ROUTES = ["/login", "/invite", "/terms", "/privacy", "/license", "/cookies", "/acceptable-use"];
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
     const { user, loading, setUser, setLoading } = useAuthStore();

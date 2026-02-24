@@ -335,6 +335,7 @@ async function flushToFirestore() {
 }
 
 // ── Public: Set user for Firestore flush ──
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function setBurnUser(_userId: string) {
     // Disabled (Server-Side BurnEngine used)
 }

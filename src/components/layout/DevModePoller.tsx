@@ -1,23 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
+/**
+ * DevModePoller — Fires a single initial poll on mount in development mode.
+ * Recurring polling is handled by useDevScheduler (30s interval with auth gating).
+ * This component only provides the immediate first poll for fast feedback on page load.
+ */
 export function DevModePoller() {
+    const polled = useRef(false);
+
     useEffect(() => {
-        if (process.env.NODE_ENV === 'development') {
-            const poll = () => {
-                fetch('/api/dev/process-reminders').catch(err =>
-                    console.debug('[DevPoller] Failed to poll:', err)
-                );
-            };
-
-            // Poll every 60 seconds
-            const interval = setInterval(poll, 60000);
-
-            // Initial poll
-            poll();
-
-            return () => clearInterval(interval);
+        if (process.env.NODE_ENV === 'development' && !polled.current) {
+            polled.current = true;
+            fetch('/api/dev/process-reminders').catch(() => { });
         }
     }, []);
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore as useAuth } from '@/store/authStore';
-import { subscribeProviders, addProvider, updateProvider, toggleProvider, deleteProvider } from '@/services/providerService';
+import { subscribeProviders, addProvider, toggleProvider, deleteProvider } from '@/services/providerService';
 import { useAppStore } from '@/store/appStore';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Power, PowerOff, Save, X, Shield, Zap, Server, Eye, EyeOff, ArrowLeft } from 'lucide-react';
@@ -266,8 +266,8 @@ function ProvidersContent() {
             ) : providers.length === 0 ? (
                 <div className={styles.emptyState}>
                     <Server size={40} strokeWidth={1.2} />
-                    <p>No providers configured</p>
-                    <p className={styles.emptyHint}>Add an EmailJS provider to start sending emails</p>
+                    <p>No providers configured — email sending is disabled</p>
+                    <p className={styles.emptyHint}>At least one EmailJS provider is required. Add a provider above to enable outbound emails.</p>
                 </div>
             ) : (
                 <div className={styles.providerList}>

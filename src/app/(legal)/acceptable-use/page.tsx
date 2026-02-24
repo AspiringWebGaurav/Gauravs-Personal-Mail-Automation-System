@@ -1,6 +1,13 @@
 import { SSRShell } from '@/components/layout/SSRShell';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-static';
+
+export const metadata: Metadata = {
+    title: 'Acceptable Use Policy | GPMAS',
+    description: 'Acceptable Use Policy for Gaurav\'s Personal Mail Automation System. Understand prohibited activities and compliance expectations.',
+    alternates: { canonical: 'https://gpmas.vercel.app/acceptable-use' },
+};
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
     <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '32px', marginBottom: '16px' }}>{children}</h2>
@@ -21,7 +28,7 @@ export default function AcceptableUsePage() {
                 </div>
 
                 <H2>1. Introduction</H2>
-                <P>This Acceptable Use Policy (AUP) outlines the acceptable use of the Gaurav Mail Scheduling System (GMSS). By using our service, you agree to comply with this policy.</P>
+                <P>This Acceptable Use Policy (AUP) outlines the acceptable use of Gaurav&apos;s Personal Mail Automation System (GPMAS). By using our service, you agree to comply with this policy.</P>
 
                 <H2>2. Prohibited Activities</H2>
                 <P>You may not use the service to:</P>

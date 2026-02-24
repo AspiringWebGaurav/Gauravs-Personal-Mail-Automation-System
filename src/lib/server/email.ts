@@ -1,6 +1,5 @@
 import 'server-only';
 import { logger } from '@/lib/logger';
-import { renderEmailTemplate } from '@/lib/emailTemplateRenderer';
 import { ProviderEngine } from './providerEngine';
 
 interface SendInviteEmailParams {

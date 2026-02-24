@@ -8,7 +8,7 @@ interface SSRShellProps {
     title?: string;
 }
 
-export function SSRShell({ children, title }: SSRShellProps) {
+export function SSRShell({ children }: SSRShellProps) {
     return (
         <div style={{
             minHeight: '100vh',

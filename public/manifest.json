@@ -1,7 +1,7 @@
 {
-    "name": "GMSS — Gaurav's Mail Scheduler",
-    "short_name": "GMSS",
-    "description": "Smart, automated email scheduling & reminder system. Multi-provider load balancing with disaster recovery.",
+    "name": "GPMAS — Personal Mail Automation",
+    "short_name": "GPMAS",
+    "description": "Enterprise-grade personal mail automation with intelligent multi-provider routing, automated queue processing, and real-time delivery tracking.",
     "id": "/",
     "start_url": "/",
     "scope": "/",
@@ -27,38 +27,11 @@
             "purpose": "maskable"
         }
     ],
-    "screenshots": [
-        {
-            "src": "/screenshots/mobile-1.png",
-            "sizes": "1170x2532",
-            "type": "image/png",
-            "form_factor": "narrow",
-            "label": "Home Screen"
-        },
-        {
-            "src": "/screenshots/desktop-1.png",
-            "sizes": "1920x1080",
-            "type": "image/png",
-            "form_factor": "wide",
-            "label": "Desktop Dashboard"
-        }
-    ],
     "shortcuts": [
         {
             "name": "New Event",
             "short_name": "Event",
             "url": "/create",
-            "icons": [
-                {
-                    "src": "/icons/icon.svg",
-                    "sizes": "any"
-                }
-            ]
-        },
-        {
-            "name": "Calendar",
-            "short_name": "Calendar",
-            "url": "/calendar",
             "icons": [
                 {
                     "src": "/icons/icon.svg",

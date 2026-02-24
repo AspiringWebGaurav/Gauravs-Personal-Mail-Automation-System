@@ -26,11 +26,11 @@ export function SSRFooter() {
                     fontSize: '13px',
                     color: 'var(--text-secondary)'
                 }}>
-                    <Link href="/terms" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Terms</Link>
-                    <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Privacy</Link>
-                    <Link href="/license" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>License</Link>
-                    <Link href="/cookies" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Cookies</Link>
-                    <Link href="/acceptable-use" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>AUP</Link>
+                    <Link href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Terms</Link>
+                    <Link href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Privacy</Link>
+                    <Link href="/license" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>License</Link>
+                    <Link href="/cookies" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Cookies</Link>
+                    <Link href="/acceptable-use" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>AUP</Link>
                 </div>
                 <div style={{
                     width: '100%',

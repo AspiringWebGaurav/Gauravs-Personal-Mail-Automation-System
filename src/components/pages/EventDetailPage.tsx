@@ -18,11 +18,8 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, Clock, MapPin, Users, Plus, Trash2, Bell, Send, Edit3, Save, X, Mail, Server, RefreshCw, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import type { GPMASEvent, Participant, EmailTemplate, EmailTheme, TokenInvite } from '@/types';
-import { EmailPreview } from '@/components/email/EmailPreview';
-import { resolveMessagePlaceholders } from '@/lib/messagePresets';
-import { getVariableUILabel, extractTemplateVariables } from '@/utils/templateUtils';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
+import { getVariableUILabel, extractTemplateVariables } from '@/utils/templateUtils';
 import { subscribeToEventReminders, type EventReminderDoc } from '@/services/reminderService';
 import { getStatusConfig, isActiveStatus } from '@/lib/statusConfig';
 import styles from './EventDetailPage.module.css';
@@ -58,7 +55,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
     const [reminderOffset, setReminderOffset] = useState(30);
     const [reminderBase, setReminderBase] = useState<'start' | 'end'>('start');
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
-    const [selectedThemeId, setSelectedThemeId] = useState('');
+    const [selectedThemeId] = useState('');
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [themes, setThemes] = useState<EmailTheme[]>([]);
     const [reminderVars, setReminderVars] = useState<Record<string, string>>({});
@@ -124,6 +121,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
     }, [user]);
 
     const selectedTemplate = useMemo(() => templates.find(t => t.id === selectedTemplateId), [selectedTemplateId, templates]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const selectedThemeObj = useMemo(() => themes.find(t => t.id === selectedThemeId), [selectedThemeId, themes]);
 
     // Auto-fill variables when template changes
@@ -132,7 +130,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
         if (selectedTemplate?.messageBody) {
             const vars = extractTemplateVariables(selectedTemplate.messageBody);
             const initialVars: Record<string, string> = {};
-            vars.forEach(v => { initialVars[v] = ''; });
+            vars.forEach((v: string) => { initialVars[v] = ''; });
             _t = setTimeout(() => setReminderVars(initialVars), 0);
         } else {
             _t = setTimeout(() => setReminderVars({}), 0);
