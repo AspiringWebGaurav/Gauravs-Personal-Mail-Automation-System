@@ -4,7 +4,7 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /diagnostics
+Disallow: /invite/
 Disallow: /settings/
 
 Sitemap: https://gpmas.vercel.app/sitemap.xml
