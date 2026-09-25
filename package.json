@@ -28,5 +28,11 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "@firebase/util": true,
+    "protobufjs": true,
+    "sharp": true,
+    "unrs-resolver": true
   }
 }
