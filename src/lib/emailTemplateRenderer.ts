@@ -99,7 +99,7 @@ ${content}
     <tr><td style="padding:32px;background:#f8f9fa;border-top:1px solid #eaeaea;text-align:center;">
         
         <div style="margin-bottom:24px;">
-            <a href="https://gauravpatil.online" style="display:inline-block;margin:0 12px;color:#6c5ce7;text-decoration:none;font-size:13px;font-weight:500;">Portfolio</a>
+            <a href="https://www.gauravpatil.site" style="display:inline-block;margin:0 12px;color:#6c5ce7;text-decoration:none;font-size:13px;font-weight:500;">Portfolio</a>
             <span style="color:#cbd5e1;font-size:13px;">&bull;</span>
             <a href="https://gauravworkspace.site" style="display:inline-block;margin:0 12px;color:#6c5ce7;text-decoration:none;font-size:13px;font-weight:500;">Workspace</a>
         </div>

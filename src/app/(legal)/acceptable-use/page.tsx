@@ -6,7 +6,7 @@ export const dynamic = 'force-static';
 export const metadata: Metadata = {
     title: 'Acceptable Use Policy | GPMAS',
     description: 'Acceptable Use Policy for Gaurav\'s Personal Mail Automation System. Understand prohibited activities and compliance expectations.',
-    alternates: { canonical: 'https://gpmas.vercel.app/acceptable-use' },
+    alternates: { canonical: '/acceptable-use' },
 };
 
 const H2 = ({ children }: { children: React.ReactNode }) => (

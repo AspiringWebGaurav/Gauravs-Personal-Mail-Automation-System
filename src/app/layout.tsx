@@ -15,14 +15,15 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const APP_URL = 'https://gpmas.vercel.app';
+import { APP_URL } from '@/lib/config';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: 'GPMAS | Smart Mail Scheduling & Automation',
   description: 'Gaurav\'s Personal Mail Automation System — Enterprise-grade email scheduling with multi-provider routing, intelligent failover, and real-time delivery tracking. Built by Gaurav Patil.',
   manifest: '/manifest.json',
   applicationName: 'GPMAS',
-  authors: [{ name: 'Gaurav Patil', url: 'https://www.gauravpatil.online' }],
+  authors: [{ name: 'Gaurav Patil', url: 'https://www.gauravpatil.site' }],
   creator: 'Gaurav Patil',
   publisher: 'Gaurav Patil',
   keywords: ['email scheduler', 'mail automation', 'GPMAS', 'Gaurav Patil', 'email reminders', 'scheduling system'],
@@ -98,7 +99,7 @@ const jsonLd = {
   author: {
     '@type': 'Person',
     name: 'Gaurav Patil',
-    url: 'https://www.gauravpatil.online',
+    url: 'https://www.gauravpatil.site',
   },
   offers: {
     '@type': 'Offer',

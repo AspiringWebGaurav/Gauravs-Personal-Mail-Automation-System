@@ -13,7 +13,7 @@ import LoginScreen from '@/components/LoginScreen';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase/client';
 import styles from './providers.module.css';
 
 interface ProviderUsageData {

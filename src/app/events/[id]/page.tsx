@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useParams } from 'next/navigation';
 import { AuthGuard } from '@/components/AuthGuard';
 import LoginScreen from '@/components/LoginScreen';
 import { AppShell } from '@/components/layout/AppShell';
@@ -11,10 +12,13 @@ const EventDetailPage = dynamic(() => import('@/components/pages/EventDetailPage
 });
 
 export default function EventDetailRoute() {
+    const params = useParams<{ id: string }>();
+    const eventId = params?.id || '';
+
     return (
         <AuthGuard fallback={<LoginScreen />}>
             <AppShell>
-                <EventDetailPage />
+                <EventDetailPage eventId={eventId} />
             </AppShell>
         </AuthGuard>
     );

@@ -12,7 +12,7 @@ import { subscribeToParticipants, updateParticipant, removeParticipant, createSc
 import { createInvitation, createTokenInvite, subscribeToTokenInvites } from '@/services/invitationService';
 import { getTemplates } from '@/services/templateService';
 import { getThemes } from '@/services/themeService';
-import { useAppStore } from '@/stores/appStore';
+import { useAppStore } from '@/store/appStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, Clock, MapPin, Users, Plus, Trash2, Bell, Send, Edit3, Save, X, Mail, Server, RefreshCw, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';

@@ -1,6 +1,7 @@
 import { EmailThemeColors } from '../emailTemplateRenderer';
+import { APP_URL } from '@/lib/config';
 
-export function renderBrandingFooter(theme: EmailThemeColors, baseUrl: string = 'https://gaurav-mail-sheduling-system.vercel.app'): string {
+export function renderBrandingFooter(theme: EmailThemeColors, baseUrl: string = APP_URL): string {
     const year = new Date().getFullYear();
     const { textColor } = theme;
     // Auto-adjust footer color based on text color (opacity 0.6)

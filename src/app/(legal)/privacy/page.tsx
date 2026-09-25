@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Privacy Policy | GPMAS',
     description: 'Privacy Policy for Gaurav\'s Personal Mail Automation System. Learn how your data is collected, used, and protected.',
-    alternates: { canonical: 'https://gpmas.vercel.app/privacy' },
+    alternates: { canonical: '/privacy' },
 };
 
 const H2 = ({ children }: { children: React.ReactNode }) => (

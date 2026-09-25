@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore as useAuth } from '@/store/authStore';
 
-import { useAppStore } from '@/stores/appStore';
+import { useAppStore } from '@/store/appStore';
 import { getTemplates } from '@/services/templateService';
 
 import { motion, AnimatePresence } from 'framer-motion';

@@ -260,7 +260,7 @@ export default function LoginScreen() {
           </p>
           <div className={styles.footerLinks}>
             <a
-              href="https://www.gauravpatil.online"
+              href="https://www.gauravpatil.site"
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -8,7 +8,7 @@ import styles from './AppShell.module.css';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
-import { useAppStore } from '@/stores/appStore';
+import { useAppStore } from '@/store/appStore';
 import { useDevScheduler } from '@/hooks/useDevScheduler';
 
 export function AppShell({ children }: { children: ReactNode }) {

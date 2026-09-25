@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Terms of Service | GPMAS',
     description: 'Terms of Service for Gaurav\'s Personal Mail Automation System. Read the usage terms, disclaimers, and obligations.',
-    alternates: { canonical: 'https://gpmas.vercel.app/terms' },
+    alternates: { canonical: '/terms' },
 };
 
 const H2 = ({ children }: { children: React.ReactNode }) => (

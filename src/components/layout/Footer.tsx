@@ -11,7 +11,7 @@ export function Footer() {
 
             <div className={styles.links}>
                 <a
-                    href="https://www.gauravpatil.online"
+                    href="https://www.gauravpatil.site"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.brandLink}

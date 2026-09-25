@@ -10,7 +10,7 @@ import { useAuthStore as useAuth } from '@/store/authStore';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { extractTemplateVariables, renderEmailTemplate } from '@/lib/emailTemplateRenderer';
 import { getVariableUILabel } from '@/utils/templateUtils';
-import { useAppStore } from '@/stores/appStore';
+import { useAppStore } from '@/store/appStore';
 import styles from './TemplatesPage.module.css';
 
 export default function TemplatesPage() {

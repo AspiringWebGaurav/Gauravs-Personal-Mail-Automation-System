@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '@/stores/appStore';
+import { useAppStore } from '@/store/appStore';
 import { Check, AlertCircle, Info, X } from 'lucide-react';
 import styles from './Toast.module.css';
 

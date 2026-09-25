@@ -9,7 +9,6 @@ const eslintConfig = defineConfig([
       "out/**",
       "build/**",
       "next-env.d.ts",
-      "failed-reference-only/**",
       "public/**",
       "scripts/**",
       "**/*.js",

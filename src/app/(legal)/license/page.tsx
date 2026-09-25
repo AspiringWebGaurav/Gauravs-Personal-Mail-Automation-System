@@ -6,7 +6,7 @@ export const dynamic = 'force-static';
 export const metadata: Metadata = {
     title: 'License | GPMAS',
     description: 'Private Use License for Gaurav\'s Personal Mail Automation System. All intellectual property rights reserved by Gaurav Patil.',
-    alternates: { canonical: 'https://gpmas.vercel.app/license' },
+    alternates: { canonical: '/license' },
 };
 
 const H2 = ({ children }: { children: React.ReactNode }) => (

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import crypto from 'crypto';
 import { z } from 'zod';
+import { getAppUrl } from '@/lib/config';
+import crypto from 'crypto';
 
 const createInviteSchema = z.object({
     eventId: z.string().min(1),
@@ -97,7 +98,7 @@ export async function POST(req: Request) {
             renderedHtml: `
                 <h2>Invitation to ${eventData.title}</h2>
                 <p>You have been invited to join this event on GPMAS.</p>
-                <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invite/${rawToken}">Click here to Accept</a></p>
+                <p><a href="${getAppUrl(`/invite/${rawToken}`)}">Click here to Accept</a></p>
                 <p>This link expires in 24 hours.</p>
             `,
             status: 'pending',
