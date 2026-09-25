@@ -27,7 +27,7 @@ export function BottomNav() {
 
 
                     return (
-                        <Link key={tab.href} href={tab.href} className={`${styles.tab} ${isActive ? styles.active : ''}`}>
+                        <Link key={tab.href} href={tab.href} prefetch={false} className={`${styles.tab} ${isActive ? styles.active : ''}`}>
                             <motion.div
                                 className={styles.iconWrap}
                                 whileTap={{ scale: 0.85 }}

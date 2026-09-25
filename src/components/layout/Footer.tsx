@@ -29,15 +29,15 @@ export function Footer() {
             </div>
 
             <div className={styles.legalLinks}>
-                <Link href="/terms" target="_blank" rel="noopener noreferrer" className={styles.legalLink}>Terms</Link>
+                <Link href="/terms" prefetch={false} target="_blank" rel="noopener noreferrer" className={styles.legalLink}>Terms</Link>
                 <span className={styles.separator}>·</span>
-                <Link href="/privacy" target="_blank" rel="noopener noreferrer" className={styles.legalLink}>Privacy</Link>
+                <Link href="/privacy" prefetch={false} target="_blank" rel="noopener noreferrer" className={styles.legalLink}>Privacy</Link>
                 <span className={styles.separator}>·</span>
-                <Link href="/license" target="_blank" rel="noopener noreferrer" className={styles.legalLink}>License</Link>
+                <Link href="/license" prefetch={false} target="_blank" rel="noopener noreferrer" className={styles.legalLink}>License</Link>
                 <span className={styles.separator}>·</span>
-                <Link href="/cookies" target="_blank" rel="noopener noreferrer" className={styles.legalLink}>Cookies</Link>
+                <Link href="/cookies" prefetch={false} target="_blank" rel="noopener noreferrer" className={styles.legalLink}>Cookies</Link>
                 <span className={styles.separator}>·</span>
-                <Link href="/acceptable-use" target="_blank" rel="noopener noreferrer" className={styles.legalLink}>AUP</Link>
+                <Link href="/acceptable-use" prefetch={false} target="_blank" rel="noopener noreferrer" className={styles.legalLink}>AUP</Link>
             </div>
 
             <p className={styles.copyright}>
